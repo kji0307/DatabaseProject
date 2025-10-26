@@ -1,2 +1,2 @@
 # DatabaseProject
-한식 레시피 추천 서비스
+경주 문화재 퀴즈

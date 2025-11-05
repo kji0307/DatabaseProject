@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경주 문화재 퀴즈</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 페이지 전체 배경 이미지 */
+        body {
+            min-height: 100vh; /* 화면 전체 높이 */
+            background: url('images/main-bg.png') no-repeat center center;
+            background-size: cover; /* 화면에 맞게 자연스럽게 확장 */
+            background-attachment: fixed; /* 스크롤 시 배경 고정 */
+        }
+
+        /* 텍스트 가독성을 위한 오버레이 (선택) */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(70,70,70,0.4);
+            z-index: -1;
+        }
+    </style>
+    
+</head>
+<body>
+<header class="navbar">
+    <div class="nav-container">
+        <h1 class="logo"><a href="index.html">🎭경주 문화재 게임</a></h1>
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="heritage.html" class="nav-link">문화재 정보</a></li>
+                <li><a href="quiz.html" class="nav-link">게임</a></li>
+                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                <li><a href="login.html" class="nav-link">로그인</a></li>
+                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<!-- 여기부터 메인 콘텐츠 시작 -->
+<main>
+    <section class="hero">
+        
+        <h2>경주의 숨은 문화재를 라이어게임으로 즐기세요!</h2>
+        <p>역사와 재미가 함께하는 문화재 탐험, 지금 시작해보세요.</p>
+        <button onclick="location.href='quiz.html'">게임 시작</button>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <img src="quiz_icon.png" alt="퀴즈 아이콘">
+            <h3>퀴즈 도전</h3>
+            <p>문화재 지식을 테스트하고 점수를 확인하세요.</p>
+        </div>
+        <div class="feature-card">
+            <img src="info_icon.png" alt="정보 아이콘">
+            <h3>문화재 정보</h3>
+            <p>경주 문화재에 대한 상세 정보를 확인하세요.</p>
+        </div>
+    </section>
+</main>
+<!-- 메인 콘텐츠 끝 -->
+
+<footer>
+    <p>© 2025 경주 문화재 게임 | 제작: 지혁,창민,성민</p>
+</footer>
+
+<!-- 로그인 상태에 따라 메뉴 변경 -->
+ <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const user = localStorage.getItem("user"); // 로그인 상태 확인
+    const loginMenu = document.querySelector('a[href="login.html"]').parentElement;
+    const logoutMenu = document.getElementById("logout-menu");
+
+    if (user) {
+        // 로그인 상태면 로그인 메뉴 숨기고 로그아웃 메뉴 보이기
+        loginMenu.style.display = "none";
+        logoutMenu.style.display = "block";
+    } else {
+        // 로그아웃 상태면 로그인 메뉴 보이기
+        loginMenu.style.display = "block";
+        logoutMenu.style.display = "none";
+    }
+
+    // 로그아웃 클릭 시
+    document.getElementById("logout-btn").addEventListener("click", function () {
+        localStorage.removeItem("user"); // 로그인 상태 제거
+        location.reload(); // 페이지 새로고침으로 메뉴 갱신
+    });
+});
+</script>
+
+<script src="js/main.js"></script>
+</body>
+</html>
+

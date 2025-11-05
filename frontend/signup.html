@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="navbar">
+    <div class="nav-container">
+        <h1 class="logo"><a href="index.html">경주 문화재 퀴즈</a></h1>
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="heritage.html" class="nav-link">문화재 정보</a></li>
+                <li><a href="quiz.html" class="nav-link">게임</a></li>
+                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                <li><a href="login.html" class="nav-link">로그인</a></li>
+                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+<main class="form-container">
+    <h2>회원가입</h2>
+    <form id="signupForm">
+        <div class="form-group">
+            <label for="username">아이디</label>
+            <input type="text" id="username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">비밀번호</label>
+            <input type="password" id="password" required>
+        </div>
+
+        <button type="submit">회원가입</button>
+    </form>
+</main>
+
+<script src="js/main.js"></script>
+<script>
+    document.getElementById("signupForm").addEventListener("submit", function(e){
+        e.preventDefault();
+
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        let users = JSON.parse(localStorage.getItem("users")) || {};
+
+        if(users[username]){
+            alert("이미 존재하는 아이디입니다.");
+        } else {
+            users[username] = password;
+            localStorage.setItem("users", JSON.stringify(users));
+            alert("회원가입이 완료되었습니다!");
+            window.location.href = "login.html";
+        }
+    });
+</script>
+</body>
+</html>

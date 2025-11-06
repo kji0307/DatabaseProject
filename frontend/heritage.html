@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문화재 정보</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="navbar">
+    <div class="nav-container">
+        <h1 class="logo"><a href="index.html">경주 문화재 정보</a></h1>
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="heritage.html" class="nav-link">문화재 정보</a></li>
+                <li><a href="game_room.html" class="nav-link">게임 대기방</a></li>
+                <li><a href="game_play.html" class="nav-link">게임 시작</a></li>
+                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                <li><a href="login.html" class="nav-link">로그인</a></li>
+                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main class="info-container">
+        <h2>경주 문화재 정보 탐색</h2>
+
+        <div class="search-filter-area">
+            <input type="text" id="search-input" placeholder="문화재 이름 또는 키워드 검색">
+            <select id="filter-type">
+                <option value="all">전체 문화재</option>
+                <option value="국보">국보</option>
+                <option value="보물">보물</option>
+                <option value="사적">사적</option>
+            </select>
+            <button id="search-button">검색</button>
+        </div>
+
+        <div class="cultural-heritage-list">
+            <div class="heritage-card" data-id="1">
+                <div class="heritage-card-image"></div>
+                <div class="heritage-card-content">
+                    <h3>불국사</h3>
+                    <p>유형: 국보 / 시대: 통일신라</p>
+                    <p>석가탑과 다보탑이 있는 신라 시대의 대표적인 사찰.</p>
+                </div>
+            </div>
+            
+            <div class="heritage-card" data-id="2">
+                <div class="heritage-card-image"></div>
+                <div class="heritage-card-content">
+                    <h3>석굴암</h3>
+                    <p>유형: 국보 / 시대: 통일신라</p>
+                    <p>완벽한 건축미와 종교 예술의 극치를 보여주는 문화재.</p>
+                </div>
+            </div>
+
+            <div class="heritage-card" data-id="3">
+                <div class="heritage-card-image"></div>
+                <div class="heritage-card-content">
+                    <h3>동궁과 월지</h3>
+                    <p>유형: 사적 / 시대: 통일신라</p>
+                    <p>신라 왕궁의 별궁으로, 화려한 연회 장소로 사용됨.</p>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 경주 문화재 게임 | 제작: 지혁,창민,성민</p>
+    </footer>
+
+<script src="js/heritage.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

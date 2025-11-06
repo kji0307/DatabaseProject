@@ -22,10 +22,9 @@
     </div>
 </header>
 
-
 <main class="form-container">
     <h2>회원가입</h2>
-    <form id="signupForm">
+    <form id="signupForm" onsubmit="event.preventDefault(); signupUser();">
         <div class="form-group">
             <label for="username">아이디</label>
             <input type="text" id="username" required>
@@ -40,25 +39,6 @@
     </form>
 </main>
 
-<script src="js/main.js"></script>
-<script>
-    document.getElementById("signupForm").addEventListener("submit", function(e){
-        e.preventDefault();
-
-        const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value.trim();
-
-        let users = JSON.parse(localStorage.getItem("users")) || {};
-
-        if(users[username]){
-            alert("이미 존재하는 아이디입니다.");
-        } else {
-            users[username] = password;
-            localStorage.setItem("users", JSON.stringify(users));
-            alert("회원가입이 완료되었습니다!");
-            window.location.href = "login.html";
-        }
-    });
-</script>
+<script src="js/auth.js"></script>
 </body>
 </html>

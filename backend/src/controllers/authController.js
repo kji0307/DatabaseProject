@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 let users = [];
 
 // 회원가입
-exports.register = async (req, res) => {
+exports.signup = async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -19,7 +19,10 @@ exports.register = async (req, res) => {
     const newUser = { id: users.length + 1, username, password: hashedPassword };
     users.push(newUser);
 
-    res.status(201).json({ message: "회원가입 성공", user: { id: newUser.id, username: newUser.username } });
+    res.status(201).json({
+      message: "회원가입 성공",
+      user: { id: newUser.id, username: newUser.username }
+    });
   } catch (err) {
     res.status(500).json({ message: "회원가입 중 오류 발생", error: err.message });
   }
@@ -40,10 +43,15 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: process.env.JWT_EXPIRES_IN || "2h" }
     );
 
-    res.json({ message: "로그인 성공", token });
+    // ✅ 수정된 응답 (프론트에서 user/token 둘 다 받도록)
+    res.json({
+      message: "로그인 성공",
+      user: { id: user.id, username: user.username },
+      token: token
+    });
   } catch (err) {
     res.status(500).json({ message: "로그인 중 오류 발생", error: err.message });
   }

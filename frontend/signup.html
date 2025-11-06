@@ -22,10 +22,16 @@
     </div>
 </header>
 
+<<<<<<< HEAD
 
 <main class="form-container">
     <h2>회원가입</h2>
     <form id="signupForm">
+=======
+<main class="form-container">
+    <h2>회원가입</h2>
+    <form id="signupForm" onsubmit="event.preventDefault(); signupUser();">
+>>>>>>> origin/backend-dev
         <div class="form-group">
             <label for="username">아이디</label>
             <input type="text" id="username" required>
@@ -40,6 +46,7 @@
     </form>
 </main>
 
+<<<<<<< HEAD
 <script src="js/main.js"></script>
 <script>
     document.getElementById("signupForm").addEventListener("submit", function(e){
@@ -60,5 +67,8 @@
         }
     });
 </script>
+=======
+<script src="js/auth.js"></script>
+>>>>>>> origin/backend-dev
 </body>
 </html>

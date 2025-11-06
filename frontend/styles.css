@@ -308,3 +308,274 @@ form button:hover {
     background-color: #004a95;
 }
 
+
+
+
+/* ============================================== */
+/* === 크레이지 아케이드 (Crazy Arcade) 스타일 전용 === */
+/* === (game_room.html 전용) === */
+/* ============================================== */
+
+:root {
+    --ca-blue-dark: #1e3a6e;
+    --ca-blue-medium: #3c78d8;
+    --ca-blue-light: #6aa8d8;
+    --ca-yellow: #ffc000;
+    --ca-red: #cc0000;
+    --ca-border-color: #000;
+}
+
+/* ⭐ 다른 페이지에 영향을 주지 않기 위해 body 스타일을 제거했습니다. ⭐ */
+
+/* 크아 로비 전체 컨테이너: 고정 크기 및 중앙 정렬 */
+.ca-lobby-wrapper {
+    display: flex;
+    width: 1000px; /* 크아 스타일 고정 너비 */
+    height: 700px; /* 고정 높이 */
+    margin: 20px auto; /* 중앙 정렬, 헤더 아래 공간 확보 */
+    border: 5px solid var(--ca-border-color);
+    box-shadow: 0 0 0 3px var(--ca-blue-dark);
+    /* 로비 배경색과 기본 폰트/색상 설정 */
+    background-color: var(--ca-blue-medium); 
+    color: white; 
+    font-family: 'Arial Black', sans-serif;
+    user-select: none;
+}
+
+/* --- 1. 왼쪽 패널 (플레이어 슬롯) --- */
+.ca-left-panel {
+    width: 60%;
+    background-color: var(--ca-blue-light);
+    border-right: 3px solid var(--ca-border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.ca-title-bar {
+    background-color: var(--ca-blue-dark);
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--ca-border-color);
+}
+
+.ca-mode { font-size: 1.1em; font-weight: bold; }
+
+.ca-settings {
+    background-color: var(--ca-blue-medium);
+    color: white;
+    border: 2px solid var(--ca-border-color);
+    padding: 3px 8px;
+    cursor: pointer;
+}
+
+/* 플레이어 슬롯 그리드 */
+.player-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4열 배치 */
+    grid-template-rows: repeat(2, 1fr); /* 2행 배치 (총 8 슬롯) */
+    padding: 20px;
+    gap: 15px;
+}
+
+.player-slot {
+    background-color: var(--ca-blue-dark);
+    border: 3px solid var(--ca-border-color);
+    padding: 10px 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    height: 150px; 
+}
+
+.player-avatar {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 5px;
+}
+
+.player-name {
+    font-size: 0.9em;
+    font-weight: bold;
+    background-color: var(--ca-red); 
+    padding: 2px 10px;
+    border-radius: 3px;
+    margin-bottom: 5px;
+}
+
+.player-status {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: var(--ca-yellow);
+}
+
+.player-slot.host {
+    border-color: var(--ca-yellow);
+}
+.player-slot.ready .player-status {
+    color: var(--ca-red); 
+}
+
+/* 하단 메시지 및 채팅 */
+.ca-bottom-section {
+    flex-grow: 1;
+    background-color: var(--ca-blue-medium);
+    border-top: 2px solid var(--ca-border-color);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ca-message-box {
+    background-color: var(--ca-blue-dark);
+    border: 2px solid var(--ca-border-color);
+    flex-grow: 1;
+    padding: 5px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    overflow-y: auto;
+}
+
+.ca-chat-input {
+    display: flex;
+}
+.ca-chat-input input {
+    flex-grow: 1;
+    border: 2px solid var(--ca-border-color);
+    padding: 5px;
+    background-color: white;
+    color: var(--ca-blue-dark);
+}
+.ca-chat-input button {
+    background-color: var(--ca-blue-dark);
+    color: white;
+    border: 2px solid var(--ca-border-color);
+    padding: 5px 10px;
+    margin-left: -2px; 
+}
+
+/* --- 2. 오른쪽 패널 (선택 및 시작) --- */
+.ca-right-panel {
+    width: 40%;
+    background-color: var(--ca-blue-light);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ca-top-info {
+    margin-bottom: 10px;
+    border: 3px solid var(--ca-border-color);
+    background-color: var(--ca-yellow);
+    color: var(--ca-red);
+    padding: 10px;
+    text-align: center;
+}
+
+/* 캐릭터 선택 그리드 */
+.ca-character-select {
+    display: flex;
+    margin-bottom: 15px;
+    border: 3px solid var(--ca-border-color);
+    background-color: var(--ca-blue-dark);
+    padding: 10px;
+}
+
+.char-grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 5px;
+    width: 75%;
+}
+
+.char-avatar {
+    background-color: var(--ca-blue-medium);
+    border: 2px solid var(--ca-border-color);
+    height: 40px;
+    width: 40px;
+}
+.char-avatar.selected {
+    border-color: var(--ca-yellow);
+    box-shadow: 0 0 5px var(--ca-yellow);
+}
+
+.char-control-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    width: 25%;
+}
+
+.char-btn {
+    width: 80%;
+    background-color: var(--ca-red);
+    color: white;
+    border: 2px solid var(--ca-border-color);
+    padding: 5px 0;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 맵/아이템/시작 버튼 영역 */
+.ca-action-panel {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ca-map-options {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.map-preview-box {
+    background-color: var(--ca-blue-dark);
+    border: 3px solid var(--ca-border-color);
+    width: 60%;
+    padding: 10px;
+    text-align: center;
+}
+
+.map-select-btn {
+    background-color: var(--ca-red);
+    color: white;
+    border: 2px solid var(--ca-border-color);
+    padding: 5px 15px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+
+.ca-rank-info {
+    background-color: var(--ca-blue-dark);
+    border: 3px solid var(--ca-border-color);
+    width: 35%;
+    padding: 10px;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.ca-start-button {
+    background-color: var(--ca-yellow);
+    color: var(--ca-red);
+    border: 4px solid var(--ca-red);
+    padding: 15px 0;
+    font-size: 2em;
+    font-weight: extra-bold;
+    cursor: pointer;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px var(--ca-blue-dark);
+}
+
+.ca-auto-ready {
+    text-align: right;
+    font-size: 0.8em;
+    color: var(--ca-blue-dark);
+}

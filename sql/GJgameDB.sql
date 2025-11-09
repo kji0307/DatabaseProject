@@ -21,11 +21,11 @@ USE `heritagedb`;
 
 -- 테이블 heritagedb.chat_log_tbl 구조 내보내기
 CREATE TABLE IF NOT EXISTS `chat_log_tbl` (
-  `chatID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `roomID` bigint(20) NOT NULL,
-  `userID` bigint(20) NOT NULL,
-  `message` varchar(500) NOT NULL,
-  `createdAT` datetime NOT NULL,
+  `chatID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `roomID` bigint(20) unsigned NOT NULL,
+  `userID` bigint(20) unsigned NOT NULL,
+  `chatMessage` varchar(500) NOT NULL,
+  `chatTime` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`chatID`),
   KEY `FK_chat_log_tbl_liar_game_room_tbl` (`roomID`),
   KEY `FK_chat_log_tbl_user_tbl` (`userID`),
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `chat_log_tbl` (
 
 -- 테이블 heritagedb.heritage_tbl 구조 내보내기
 CREATE TABLE IF NOT EXISTS `heritage_tbl` (
-  `heritageID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `heritageID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `heritageName` varchar(100) NOT NULL,
   `heritageCategory` varchar(50) NOT NULL,
   `heritageDesc` text DEFAULT NULL,
@@ -49,13 +49,13 @@ CREATE TABLE IF NOT EXISTS `heritage_tbl` (
 
 -- 테이블 heritagedb.liar_game_result_tbl 구조 내보내기
 CREATE TABLE IF NOT EXISTS `liar_game_result_tbl` (
-  `resultID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `roomID` bigint(20) NOT NULL,
-  `winnerID` bigint(20) DEFAULT NULL,
-  `roundsWon` tinyint(4) NOT NULL,
-  `totalRounds` tinyint(4) NOT NULL,
-  `isLiarWin` tinyint(1) NOT NULL DEFAULT 1,
-  `endTime` datetime NOT NULL,
+  `resultID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `roomID` bigint(20) unsigned NOT NULL,
+  `winnerID` bigint(20) unsigned DEFAULT NULL,
+  `winRounds` tinyint(4) unsigned NOT NULL,
+  `totalRounds` tinyint(4) unsigned NOT NULL,
+  `isLiarWin` tinyint(1) unsigned NOT NULL DEFAULT 1,
+  `endTime` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`resultID`),
   KEY `FK_liar_game_result_tbl_liar_game_room_tbl` (`roomID`),
   KEY `FK_liar_game_result_tbl_user_tbl` (`winnerID`),
@@ -67,13 +67,13 @@ CREATE TABLE IF NOT EXISTS `liar_game_result_tbl` (
 
 -- 테이블 heritagedb.liar_game_room_tbl 구조 내보내기
 CREATE TABLE IF NOT EXISTS `liar_game_room_tbl` (
-  `roomID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `hostID` bigint(20) NOT NULL,
-  `liarID` bigint(20) DEFAULT NULL,
-  `heritageID` bigint(20) NOT NULL,
-  `playerCount` tinyint(3) unsigned zerofill NOT NULL DEFAULT 000,
-  `isActive` tinyint(1) NOT NULL DEFAULT 1,
-  `createdAT` datetime NOT NULL,
+  `roomID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `hostID` bigint(20) unsigned NOT NULL,
+  `liarID` bigint(20) unsigned DEFAULT NULL,
+  `heritageID` bigint(20) unsigned NOT NULL,
+  `playerCount` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `isActive` tinyint(1) unsigned NOT NULL DEFAULT 1,
+  `createdAT` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`roomID`),
   KEY `FK_liar_game_room_tbl_user_tbl` (`hostID`),
   KEY `FK_liar_game_room_tbl_user_tbl_2` (`liarID`),
@@ -87,11 +87,11 @@ CREATE TABLE IF NOT EXISTS `liar_game_room_tbl` (
 
 -- 테이블 heritagedb.liar_vote_tbl 구조 내보내기
 CREATE TABLE IF NOT EXISTS `liar_vote_tbl` (
-  `voteID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `roomID` bigint(20) NOT NULL,
-  `voterID` bigint(20) NOT NULL,
-  `targetID` bigint(20) NOT NULL,
-  `voteTime` datetime NOT NULL,
+  `voteID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `roomID` bigint(20) unsigned NOT NULL,
+  `voterID` bigint(20) unsigned NOT NULL,
+  `targetID` bigint(20) unsigned NOT NULL,
+  `voteTime` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`voteID`),
   UNIQUE KEY `UX_room_voter` (`roomID`,`voterID`),
   KEY `FK_liar_vote_tbl_user_tbl` (`voterID`),
@@ -105,26 +105,26 @@ CREATE TABLE IF NOT EXISTS `liar_vote_tbl` (
 
 -- 테이블 heritagedb.ranking_tbl 구조 내보내기
 CREATE TABLE IF NOT EXISTS `ranking_tbl` (
-  `rankingID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `userID` bigint(20) NOT NULL,
-  `totalScore` int(11) unsigned zerofill NOT NULL DEFAULT 00000000000,
+  `rankingID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `userID` bigint(20) unsigned NOT NULL,
+  `totalScore` int(11) unsigned NOT NULL DEFAULT 0,
   `lastPlay` datetime DEFAULT NULL,
   PRIMARY KEY (`rankingID`),
   KEY `FK_rankingtbl_usertbl_2` (`totalScore`),
   KEY `userID` (`userID`),
   CONSTRAINT `FK_ranking_tbl_user_tbl` FOREIGN KEY (`userID`) REFERENCES `user_tbl` (`userID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `FK_rankingtbl_usertbl_2` FOREIGN KEY (`totalScore`) REFERENCES `user_tbl` (`totalScore`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `FK_ranking_tbl_user_tbl_2` FOREIGN KEY (`totalScore`) REFERENCES `user_tbl` (`totalScore`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
 -- 테이블 heritagedb.user_tbl 구조 내보내기
 CREATE TABLE IF NOT EXISTS `user_tbl` (
-  `userID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `userID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `userName` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `totalScore` int(11) unsigned zerofill NOT NULL DEFAULT 00000000000,
-  `currentRoom` bigint(20) DEFAULT NULL,
+  `totalScore` int(11) unsigned NOT NULL DEFAULT 0,
+  `currentRoom` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`userID`),
   UNIQUE KEY `userName` (`userName`),
   KEY `totalScore` (`totalScore`)

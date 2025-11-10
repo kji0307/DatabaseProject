@@ -579,3 +579,80 @@ form button:hover {
     font-size: 0.8em;
     color: var(--ca-blue-dark);
 }
+
+
+
+.room-list-section {
+    width: 1000px;
+    margin: 30px auto;
+    background: #0a375e;
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+}
+
+.room-menu {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.menu-btn {
+    padding: 7px 15px;
+    background: #1f89d8;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.rooms-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.room-card {
+    background: #1c4272;
+    border-radius: 10px;
+    padding: 15px;
+    height: 150px;
+}
+
+.room-card.empty {
+    opacity: 0.4;
+}
+
+.room-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.room-status {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.enter-btn {
+    margin-top: 15px;
+    padding: 6px 12px;
+    width: 100%;
+    background: #e0b300;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.chat-footer {
+    margin-top: 20px;
+}
+
+.chat-input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}

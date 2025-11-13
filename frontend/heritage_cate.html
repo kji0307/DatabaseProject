@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문화재 정보</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ---------------------------------- */
+        /* 기본 및 레이아웃 스타일 (추가됨) */
+        /* ---------------------------------- */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* Req 3: flex로 중앙 정렬 */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 페이지 컨텐츠를 가로 중앙에 배치 */
+            min-height: 100vh; /* 푸터를 화면 하단에 고정하기 위함 */
+        }
+        /* ---------------------------------- */
+        /* 카드 컨테이너 스타일 (수정됨) */
+        /* ---------------------------------- */
+        .category-container {
+            display: grid;
+            grid-template-columns: repeat(2, 250px); /* 250px 크기의 열 2개 생성 */ 
+            gap: 25px; 
+            
+            /* Req 2: 한 행에 2개씩 배치를 위해 max-width 수정 */
+            /* (카드 250px * 2) + (간격 25px) = 525px */
+            max-width: 525px; 
+            
+            width: 100%;
+            padding: 40px 0; /* 카드 위아래 여백 추가 */
+            flex-grow: 1; /* 빈 공간을 채워 푸터를 하단으로 밀어냄 */
+        }
+
+        /* ---------------------------------- */
+        /* 개별 카드 스타일 (수정됨) */
+        /* ---------------------------------- */
+        .category-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            
+            /* Req 1: 가로/세로 길이를 250px로 동일하게 설정 */
+            width: 250px; 
+            height: 250px; 
+            box-sizing: border-box; /* padding이 크기에 포함되도록 설정 */
+            
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer; 
+            border: 1px solid #e0e0e0;
+
+            /* Req 1: 카드 내부 텍스트를 세로/가로 중앙 정렬 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* 마지막 카드를 1번째 열로 강제 지정*/
+        .category-card:last-child {
+            grid-column-start: 1;
+        }
+
+        /* 카드 호버(Hover) 효과 */
+        .category-card:hover {
+            transform: translateY(-8px); 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* ---------------------------------- */
+        /* 푸터 스타일 (스크린샷 기반 추가) */
+        /* ---------------------------------- */
+        footer {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+    <div class="nav-container">
+        <h1 class="logo"><a href="index.html">경주 문화재 정보</a></h1>
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="heritage.html" class="nav-link">문화재 정보</a></li>
+                
+                <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
+                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                <li><a href="login.html" class="nav-link">로그인</a></li>
+                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+            </ul>
+        </nav>
+    </div>
+    </header>
+
+    <div class="category-container">
+
+        <div class="category-card" onclick="location.href='#'">
+            <div class="card-title">유물</div>
+        </div>
+
+        <div class="category-card" onclick="location.href='#'">
+            <div class="card-title">유적건조물</div>
+        </div>
+
+        <div class="category-card" onclick="location.href='#'">
+            <div class="card-title">기록유산</div>
+        </div>
+
+        <div class="category-card" onclick="location.href='#'">
+            <div class="card-title">무형유산</div>
+        </div>
+
+        <div class="category-card" onclick="location.href='#'">
+            <div class="card-title">무형국가유산</div>
+        </div>
+
+        <div class="category-card" onclick="location.href='#'">
+            <div class="card-title">자연유산</div>
+        </div>
+        
+        <div class="category-card" onclick="location.href='#'">
+            <div class="card-title">등록문화유산</div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2025 경주 문화재 게임 | 제작: 지혁,창민,성민</p>
+    </footer>
+
+</body>
+</html>

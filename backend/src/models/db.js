@@ -1,4 +1,24 @@
-console.log("⚠️ MariaDB 연결 생략 (성민이 DB 준비 중)");
-module.exports = {
-  query: async () => { return []; } // 임시 함수: 쿼리 호출해도 에러 안 남
-};
+const mysql = require('mysql2/promise');
+require('dotenv').config();
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+pool.getConnection()
+  .then(conn => {
+    console.log("✅ MariaDB 연결 성공!");
+    conn.release();
+  })
+  .catch(err => {
+    console.error("❌ MariaDB 연결 실패:", err.message);
+  });
+
+module.exports = pool;

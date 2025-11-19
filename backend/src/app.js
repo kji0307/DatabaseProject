@@ -1,8 +1,12 @@
 require('dotenv').config();
+require('./models/db');
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const authRoutes = require('./routes/authRoutes');
+const heritageRoutes = require('./routes/heritageRoutes');
+const gameRoutes = require('./routes/gameRoutes');
 
 const app = express();
 
@@ -13,6 +17,8 @@ app.use(morgan('dev'));
 
 // 라우터
 app.use('/api/auth', authRoutes);
+app.use('/api/heritage', heritageRoutes);
+app.use('/api/game', gameRoutes);
 
 // 기본 라우트
 app.get('/', (req, res) => {

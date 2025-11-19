@@ -1,71 +1,45 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>게임 방 목록</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <title>게임 방 목록</title>
+        <link rel="stylesheet" href="styles.css"> 
 </head>
 <body>
 
 <header class="navbar">
-    <div class="nav-container">
-        <h1 class="logo"><a href="index.html">경주 문화재 게임</a></h1>
-        <nav>
-            <ul class="nav-menu">
-                <li><a href="heritage.html" class="nav-link">문화재 정보</a></li>
-                <li><a href="game_play.html" class="nav-link">게임 시작</a></li>
-                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
-                <li><a id="logout-btn" class="nav-link">로그아웃</a></li>
-            </ul>
-        </nav>
-    </div>
+    <div class="nav-container">
+        <h1 class="logo"><a href="index.html">경주 문화재 게임</a></h1>
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
+                <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
+                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                <li><a href="login.html" class="nav-link">로그인</a></li>
+                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+            </ul>
+        </nav>
+    </div>
 </header>
 
 <section class="room-list-section">
+    <div class="room-menu">
+                <button class="menu-btn" onclick="alert('방 만들기 기능 구현 예정')">방 만들기</button>
+        <button class="menu-btn">대기방 입장</button>
+        <button class="menu-btn">모든 방 보기</button>
+        <button class="menu-btn">혼자 놀기</button>
+    </div>
 
-    <div class="room-menu">
-        <button class="menu-btn">방 만들기</button>
-        <button class="menu-btn">대기방 입장</button>
-        <button class="menu-btn">모든 방 보기</button>
-        <button class="menu-btn">혼자 놀기</button>
-    </div>
+        <div id="roomGrid" class="rooms-container">
+            </div>
+    
+        <div id="empty" style="display:none; text-align:center; padding: 20px; color: white;">방이 없습니다</div>
 
-    <div class="rooms-container">
-        <div class="room-card">
-            <div class="room-title">★ 경주 문화재 라이어 ★</div>
-            <div class="room-status">
-                <span>PLAYING</span>
-                <span>8/8</span>
-            </div>
-            <button class="enter-btn">입장</button>
-        </div>
-
-        <div class="room-card empty"></div>
-        <div class="room-card empty"></div>
-        <div class="room-card empty"></div>
-        <div class="room-card empty"></div>
-        <div class="room-card empty"></div>
-        <div class="room-card empty"></div>
-        <div class="room-card empty"></div>
-    </div>
-
-    <footer class="chat-footer">
-        <input type="text" placeholder="채팅 입력..." class="chat-input"/>
-    </footer>
+    <footer class="chat-footer">
+        <input type="text" placeholder="채팅 입력..." class="chat-input"/>
+    </footer>
 
 </section>
-
-<script>
-document.querySelector(".menu-btn").addEventListener("click", () => {
-    window.location.href = "game_room.html";
-});
-document.querySelector(".enter-btn").addEventListener("click", () => {
-    window.location.href = "game_room.html";
-});
-</script>
-
-<section id="roomGrid"></section>
-<div id="empty" style="display:none">방이 없습니다</div>
 
 <script src="lobby.js"></script>
 </body>

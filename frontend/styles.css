@@ -656,3 +656,126 @@ form button:hover {
     border-radius: 6px;
     border: none;
 }
+
+/*랭킹 ui*/
+/* 기본 배경 스타일 (메인 페이지 톤을 참고) */
+.ranking-container {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #fcf8f2; /* 약간의 아이보리/베이지 톤 */
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-title {
+    text-align: center;
+    color: #3f4a64; /* 네이비 톤 */
+    font-size: 2.5em;
+    margin-bottom: 40px;
+    border-bottom: 3px solid #ffcc00; /* 금색 계열 강조선 */
+    padding-bottom: 10px;
+}
+
+/* --- Top 3 강조 영역 스타일 --- */
+.top3-rank {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* 1위가 가장 높게 보이도록 */
+    gap: 20px;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.rank-item {
+    background-color: #ffffff;
+    padding: 20px 15px; /* 아바타 제거 후 상하 패딩 증가 */
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 180px; /* 고정 너비 유지 */
+    transition: transform 0.3s;
+}
+
+.rank-item:hover {
+    transform: translateY(-5px);
+}
+
+.rank-1 {
+    order: 2; /* 중앙에 배치 */
+    transform: scale(1.1); /* 1위 강조 */
+    border: 4px solid gold;
+    background-color: #fffacd; /* 밝은 노란색 배경 */
+}
+
+.rank-2 {
+    order: 1; /* 왼쪽에 배치 */
+    border: 3px solid silver;
+}
+
+.rank-3 {
+    order: 3; /* 오른쪽에 배치 */
+    border: 3px solid #cd7f32; /* 브론즈 색상 */
+}
+
+.medal {
+    font-size: 3em;
+    display: block;
+    margin-bottom: 5px;
+}
+.rank-1 .medal { color: gold; }
+.rank-2 .medal { color: silver; }
+.rank-3 .medal { color: #cd7f32; }
+
+/* .avatar 스타일은 HTML에서 제거되었으므로 여기서는 삭제함 */
+
+.score {
+    font-weight: bold;
+    color: #ff4500; /* 점수 강조 색상 */
+}
+
+/* --- 일반 랭킹 목록 스타일 --- */
+.ranking-list {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    /* 🚨 짤림 방지 핵심 수정: 테이블 레이아웃을 고정하고 너비를 100%로 설정 */
+    table-layout: fixed; 
+}
+
+.ranking-list th, .ranking-list td {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    /* 모든 셀에 대해 텍스트 오버플로우 처리 */
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 🚨 열 너비 지정 (순위, 닉네임, 총점 3개 열에 맞게 조정) */
+.ranking-list th:nth-child(1), .ranking-list td:nth-child(1) {
+    width: 15%; /* 순위 (좁게) */
+}
+.ranking-list th:nth-child(2), .ranking-list td:nth-child(2) {
+    width: 55%; /* 닉네임 (넓게) */
+}
+.ranking-list th:nth-child(3), .ranking-list td:nth-child(3) {
+    width: 30%; /* 총점 */
+}
+
+.ranking-list th {
+    background-color: #3f4a64; /* 네이비 헤더 */
+    color: white;
+    font-weight: bold;
+}
+
+.ranking-list tr:nth-child(even) {
+    background-color: #f7f7f7; /* 짝수 행 배경색 */
+}
+
+.ranking-list tr:hover {
+    background-color: #e6f7ff; /* 호버 효과 */
+}
+
+
+

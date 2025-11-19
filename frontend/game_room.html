@@ -12,8 +12,8 @@
         <h1 class="logo"><a href="index.html">경주 문화재 게임</a></h1>
         <nav>
             <ul class="nav-menu">
-                <li><a href="heritage.html" class="nav-link">문화재 정보</a></li>
-                <li><a href="game_room.html" class="nav-link">게임 대기방</a></li>
+                <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
+                <li><a href="game_room.html" class="nav-link active">게임 대기방</a></li>
                 <li><a href="game_play.html" class="nav-link">게임 시작</a></li>
                 <li><a href="ranking.html" class="nav-link">랭킹</a></li>
                 <li><a href="login.html" class="nav-link">로그인</a></li>
@@ -23,20 +23,110 @@
     </div>
 </header>
 
-<section class="waiting-room-section">
-    <h2>게임 대기방</h2>
-    <p>게임이 시작될 때까지 다른 플레이어를 기다려주세요!</p>
+<div class="ca-lobby-wrapper">
+    <aside class="ca-left-panel">
+        <div class="ca-title-bar">
+            <span class="ca-mode">[일반] 경주 문화재 라이어 게임</span>
+            <button class="ca-settings">방정보변경</button>
+        </div>
+        
+        <div class="player-slots-grid">
+            <div class="player-slot host ready">
+                <img src="./images/char1.png" alt="캐릭터 아바타" class="player-avatar">
+                <span class="player-name">방장</span>
+                <span class="player-status">READY</span>
+            </div>
+            <div class="player-slot wait">
+                <img src="./images/empty.png" alt="빈 슬롯" class="player-avatar">
+                <span class="player-name">비어있음</span>
+                <span class="player-status">대기</span>
+            </div>
+            <div class="player-slot wait">
+                <img src="./images/empty.png" alt="빈 슬롯" class="player-avatar">
+                <span class="player-name">비어있음</span>
+                <span class="player-status">대기</span>
+            </div>
+             <div class="player-slot wait">
+                <img src="./images/empty.png" alt="빈 슬롯" class="player-avatar">
+                <span class="player-name">비어있음</span>
+                <span class="player-status">대기</span>
+            </div>
+             <div class="player-slot wait">
+                <img src="./images/empty.png" alt="빈 슬롯" class="player-avatar">
+                <span class="player-name">비어있음</span>
+                <span class="player-status">대기</span>
+            </div>
+             <div class="player-slot wait">
+                <img src="./images/empty.png" alt="빈 슬롯" class="player-avatar">
+                <span class="player-name">비어있음</span>
+                <span class="player-status">대기</span>
+            </div>
+             <div class="player-slot wait">
+                <img src="./images/empty.png" alt="빈 슬롯" class="player-avatar">
+                <span class="player-name">비어있음</span>
+                <span class="player-status">대기</span>
+            </div>
+             <div class="player-slot wait">
+                <img src="./images/empty.png" alt="빈 슬롯" class="player-avatar">
+                <span class="player-name">비어있음</span>
+                <span class="player-status">대기</span>
+            </div>
+        </div>
+        
+        <div class="ca-bottom-section">
+            <div class="ca-message-box">
+                <p>방장이 참가했습니다.</p>
+                <p><span>[안내]</span> 경주 문화재에 대한 지식이 필요합니다.</p>
+            </div>
+            <div class="ca-chat-input">
+                <input type="text" placeholder="전체 채팅">
+                <button>전체</button>
+            </div>
+        </div>
+    </aside>
 
-    <div class="waiting-box">
-        <h3>현재 참가자</h3>
-        <ul id="playerList">
-            <!-- JS로 동적 추가 -->
-        </ul>
+    <main class="ca-right-panel">
+        <div class="ca-top-info">
+            <div class="ca-map-preview">
+                <h2>경주 문화재 맵!</h2>
+                <p>퀴즈를 통해 라이어를 찾아라!</p>
+            </div>
+        </div>
+        
+        <div class="ca-character-select">
+            <div class="char-grid-container">
+                <div class="char-avatar selected"></div>
+                <div class="char-avatar"></div>
+                <div class="char-avatar"></div>
+                <div class="char-avatar"></div>
+            </div>
+            <div class="char-control-buttons">
+                <button class="char-btn">A</button>
+                <button class="char-btn">B</button>
+                <button class="char-btn">C</button>
+                <button class="char-btn">D</button>
+            </div>
+        </div>
+        
+        <div class="ca-action-panel">
+            <div class="ca-map-options">
+                <div class="map-preview-box">
+                    <p>문화재 맵 선택</p>
+                    <div class="map-time">05:00</div>
+                    <button class="map-select-btn">선택</button>
+                </div>
+                <div class="ca-rank-info">
+                    <p>라이어: 1</p>
+                    <p>인원: 8명</p>
+                    <p>퀴즈 수: 5</p>
+                </div>
+            </div>
 
-        <button id="startGameBtn" class="start-btn">게임 시작</button>
-    </div>
-</section>
-
+           <button class="ca-start-button" onclick="location.href='game_play.html'">시 작</button>
+            <p class="ca-auto-ready">자동 준비 (클릭)</p>
+        </div>
+    </main>
+</div>
 <script src="./js/game.js"></script>
 </body>
 </html>

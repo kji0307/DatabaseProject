@@ -1,0 +1,411 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문화재 정보</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* (생략: 기존 CSS 스타일 유지) */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .heritage-container {
+            display: grid;
+            grid-template-columns: repeat(2, 250px);
+            gap: 25px;
+            max-width: 525px;
+            width: 100%;
+            padding: 40px 0;
+            flex-grow: 1;
+        }
+
+        /* ---------------------------------- */
+        /* 개별 카드 스타일 (링크 포함) */
+        /* ---------------------------------- */
+        /* <a> 태그 안에 있는 .heritage-card의 스타일 */
+        .heritage-link { 
+            text-decoration: none; /* 링크 밑줄 제거 */
+            color: inherit; /* 글자색 상속 */
+            display: block; /* 그리드 항목으로 동작하도록 설정 */
+        }
+        
+        .heritage-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            width: 250px; 
+            height: 250px; 
+            box-sizing: border-box; 
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer; 
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 카드 호버(Hover) 효과는 <a> 태그가 아닌 .heritage-card에 적용 */
+        .heritage-link:hover .heritage-card { 
+            transform: translateY(-8px); 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        /* 나머지 CSS 스타일 유지 */
+        .card-image {
+            width: 160px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .card-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        footer {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-container">
+            <h1 class="logo"><a href="index.html">경주 문화재 정보</a></h1>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
+                    
+                    <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
+                    <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                    <li><a href="login.html" class="nav-link">로그인</a></li>
+                    <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <div class="search-filter-area">
+            <input type="text" id="search-input" placeholder="문화재 이름 또는 키워드 검색">
+            <select id="filter-type">
+                <option value="all">전체 문화재</option>
+                <option value="국보">국보</option>
+                <option value="보물">보물</option>
+                <option value="사적">사적</option>
+            </select>
+            <button id="search-button">검색</button>
+    </div>
+
+    <div class="heritage-container" id="heritage-list">
+        </div>
+
+    <footer>
+        <p>&copy; 2025 경주 문화재 게임 | 제작: 지혁,창민,성민</p>
+    </footer>
+
+    <script>
+        // DOM(HTML)이 모두 로드된 후 스크립트 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- 백엔드에서 받아올 데이터 (시뮬레이션) ---
+            const heritageData = [
+                // id는 heritage_info.html에서 상세 정보를 찾는데 사용됩니다.
+                { id: '320', name: '경주 천마총 장니 천마도', image: 'images/chunmado.png' },
+                { id: '331', name: '경주 불국사 다보탑', image: 'images/dabotap.png' },
+                { id: '324', name: '경주 불국사 삼층석탑', image: 'images/samcheung.png' },
+                { id: '350', name: '경주 불국사 연화교 및 칠보교', image: 'images/yonhwa.png' },
+                { id: '329', name: '경주 불국사 청운교 및 백운교', image: 'images/chungun.png' },
+                { id: '3236', name: '경주 석굴암 석굴', image: 'images/seokguram.png' },
+                { id: '339', name: '경주 태종무열왕릉비', image: 'images/taejong.png' },
+                { id: '326', name: '경주 불국사 금동비로자나불좌상', image: 'images/bulsang.png' }
+            ];
+            // --- 데이터 시뮬레이션 끝 ---
+
+
+            const container = document.getElementById('heritage-list');
+
+            // 받아온 데이터의 개수만큼 카드를 반복 생성합니다.
+            heritageData.forEach(item => {
+                
+                // 1. <a> 태그 요소를 만듭니다 (링크).
+                const link = document.createElement('a');
+                // ✅ href에 상세 페이지 경로와 ID를 설정합니다.
+                link.href = 'heritage_info.html?id=' + item.id;
+                link.className = 'heritage-link';
+
+                // 2. 카드 <div> 요소를 만듭니다.
+                const card = document.createElement('div');
+                card.className = 'heritage-card';
+                
+                // 3. 카드의 내부 HTML을 구성합니다.
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="card-image">
+                    
+                    <div class="card-name">${item.name}</div>
+                `;
+
+                // 4. 카드를 <a> 태그 안에 넣습니다.
+                link.appendChild(card);
+
+                // 5. 완성된 링크를 컨테이너에 추가합니다.
+                container.appendChild(link);
+
+
+                // 그리드 배치 조정 (홀수 개일 경우)
+                if (heritageData.length % 2 !== 0) {
+                    const lastElement = container.querySelector('.heritage-link:last-child');
+                    if (lastElement) {
+                        lastElement.style.gridColumnStart = '1';
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+=======
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문화재 정보</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ---------------------------------- */
+        /* 기본 및 레이아웃 스타일 (추가됨) */
+        /* ---------------------------------- */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* Req 3: flex로 중앙 정렬 */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 페이지 컨텐츠를 가로 중앙에 배치 */
+            min-height: 100vh; /* 푸터를 화면 하단에 고정하기 위함 */
+        }
+        /* ---------------------------------- */
+        /* 카드 컨테이너 스타일 (수정됨) */
+        /* ---------------------------------- */
+        .heritage-container {
+            display: grid;
+            grid-template-columns: repeat(2, 250px); /* 250px 크기의 열 2개 생성 */ 
+            gap: 25px; 
+            
+            /* Req 2: 한 행에 2개씩 배치를 위해 max-width 수정 */
+            /* (카드 250px * 2) + (간격 25px) = 525px */
+            max-width: 525px; 
+            
+            width: 100%;
+            padding: 40px 0; /* 카드 위아래 여백 추가 */
+            flex-grow: 1; /* 빈 공간을 채워 푸터를 하단으로 밀어냄 */
+        }
+
+        /* ---------------------------------- */
+        /* 개별 카드 스타일 (수정됨) */
+        /* ---------------------------------- */
+        .heritage-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            width: 250px; 
+            height: 250px; 
+            box-sizing: border-box; 
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer; 
+            border: 1px solid #e0e0e0;
+            overflow: hidden; /* 이름이 길 경우를 대비 */
+
+            /* --- [수정된 부분] --- */
+            display: flex;
+            flex-direction: column; /* 자식 요소(이미지, 텍스트)를 세로로 쌓음 */
+            justify-content: center; /* 세로 방향 중앙 정렬 */
+            align-items: center;     /* 가로 방향 중앙 정렬 */
+            /* ------------------- */
+        }
+
+        /* 카드 호버(Hover) 효과 */
+        .heritage-card:hover {
+            transform: translateY(-8px); 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        /* Req 3: 카드 중앙 이미지 스타일 */
+        .card-image {
+            width: 160px;  /* 이미지 크기 고정 */
+            height: 160px; /* 이미지 크기 고정 */
+            object-fit: cover; /* 이미지가 찌그러지지 않고 채워짐 */
+            border-radius: 8px;
+            margin-bottom: 15px; /* 이미지와 텍스트 사이 간격 */
+        }
+
+        /* Req 4: 이미지 하단 문화재 이름 스타일 */
+        .card-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        /* ---------------------------------- */
+        /* 푸터 스타일 */
+        /* ---------------------------------- */
+         footer {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-container">
+            <h1 class="logo"><a href="index.html">경주 문화재 정보</a></h1>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="heritage.html" class="nav-link">문화재 정보</a></li>
+                    
+                    <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
+                    <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                    <li><a href="login.html" class="nav-link">로그인</a></li>
+                    <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <div class="search-filter-area">
+            <input type="text" id="search-input" placeholder="문화재 이름 또는 키워드 검색">
+            <select id="filter-type">
+                <option value="all">전체 문화재</option>
+                <option value="국보">국보</option>
+                <option value="보물">보물</option>
+                <option value="사적">사적</option>
+            </select>
+            <button id="search-button">검색</button>
+    </div>
+
+    <div class="heritage-container" id="heritage-list">
+        </div>
+
+    <footer>
+        <p>&copy; 2025 경주 문화재 게임 | 제작: 지혁,창민,성민</p>
+    </footer>
+
+    <script>
+        // DOM(HTML)이 모두 로드된 후 스크립트 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- 백엔드에서 받아올 데이터 (시뮬레이션) ---
+            // Req 1: 실제로는 이 데이터를 fetch/axios 등으로 받아옵니다.
+            // (SQL 파일의 이미지 주소는 실제 이미지가 아니므로, 임시 이미지 주소(placeholder.com)를 사용했습니다.)
+            const heritageData = [
+                { 
+                    id: 320, 
+                    name: '경주 천마총 장니 천마도', 
+                    image: 'http://www.cha.go.kr/unisearch/images/national_tre' 
+                },
+                { 
+                    id: 331, 
+                    name: '경주 불국사 다보탑', 
+                    image: 'http://www.cha.go.kr/unisearch/images/national_tre' 
+                },
+                { 
+                    id: 324, 
+                    name: '경주 불국사 삼층석탑', 
+                    image: 'http://www.cha.go.kr/unisearch/images/national_tre' 
+                },
+                { 
+                    id: 350, 
+                    name: '경주 불국사 연화교 및 칠보교', 
+                    image: 'http://www.cha.go.kr/unisearch/images/national_tre' 
+                },
+                { 
+                    id: 329, 
+                    name: '경주 불국사 청운교 및 백운교', 
+                    image: 'http://www.cha.go.kr/unisearch/images/national_tre' 
+                },
+                { 
+                    id: 3236, 
+                    name: '경주 석굴암 석굴', 
+                    image: 'http://www.cha.go.kr/unisearch/images/national_tre' 
+                },
+                { 
+                    id: 339, 
+                    name: '경주 태종무열왕릉비', 
+                    image: 'http://www.cha.go.kr/unisearch/images/national_tre' 
+                },
+                { 
+                    id: 326, 
+                    name: '경주 불국사 금동비로자나불좌상', 
+                    image: 'http://www.cha.go.kr/unisearch/images/national_tre' 
+                }
+            ];
+            // --- 데이터 시뮬레이션 끝 ---
+
+
+            // 카드를 추가할 부모 컨테이너를 찾습니다.
+            const container = document.getElementById('heritage-list');
+
+            // Req 2: 받아온 데이터의 개수만큼 카드를 반복 생성합니다.
+            heritageData.forEach(item => {
+                // 1. 새로운 <div> 요소를 만듭니다 (카드 1개).
+                const card = document.createElement('div');
+                card.className = 'heritage-card'; // CSS 클래스 적용
+                
+                // 2. 카드를 클릭했을 때의 동작 (예: 상세 페이지로 이동)
+                card.onclick = () => {
+                    // location.href = 'detail.html?id=' + item.id; // 상세 페이지로 이동 (예시)
+                    alert(item.name + '을(를) 선택했습니다.');
+                };
+
+                // 3. 카드의 내부 HTML을 구성합니다.
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="card-image">
+                    
+                    <div class="card-name">${item.name}</div>
+                `;
+
+                // 4. 완성된 카드를 컨테이너에 추가합니다.
+                container.appendChild(card);
+
+                if (heritageData.length % 2 !== 0) {
+                // 홀수이면, 마지막 카드를 찾습니다.
+                const lastCard = container.querySelector('.heritage-card:last-child');
+                
+                // 마지막 카드가 존재하면
+                if (lastCard) {
+                    // 요청한 대로 1번째 열에 배치되도록 스타일을 적용합니다.
+                    lastCard.style.gridColumnStart = '1';
+                }
+            }
+            // 카드의 총 개수가 짝수이면 이 if문은 실행되지 않고, 카드는 [7][8]처럼 정상 배치됩니다.
+            // --- [여기까지] ---
+            });
+
+        });
+    </script>
+
+</body>
+>>>>>>> 26ba20430caf5ffa867b29f65396708b6c0c50da
+</html>

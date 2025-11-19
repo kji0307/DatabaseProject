@@ -4,24 +4,88 @@
     <meta charset="UTF-8">
     <title>랭킹</title>
     <link rel="stylesheet" href="styles.css">
-</head>
+    </head>
 <body>
 <header class="navbar">
     <div class="nav-container">
         <h1 class="logo"><a href="index.html">경주 문화재 랭킹</a></h1>
         <nav>
             <ul class="nav-menu">
-               <li><a href="heritage.html" class="nav-link">문화재 정보</a></li>
-                <li><a href="game_room.html" class="nav-link">게임 대기방</a></li>
-                <li><a href="game_play.html" class="nav-link">게임 시작</a></li>
-                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
-                <li><a href="login.html" class="nav-link">로그인</a></li>
-                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+               <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
+               <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
+               <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+               <li><a href="login.html" class="nav-link">로그인</a></li>
+               <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
             </ul>
         </nav>
     </div>
 </header>
 
-<script src="js/main.js"></script>
+<main class="ranking-container">
+    <h2 class="ranking-title">🏆 랭킹순위</h2>
+    
+    <div class="ranking-options">
+        <label for="sort-by">정렬 기준:</label>
+        <select id="sort-by">
+            <option value="total_score">총점</option>
+            <option value="best_score">최고 점수</option>
+        </select>
+    </div>
+
+    <div class="top3-rank">
+        <div class="rank-item rank-2">
+            <span class="medal">🥈</span>
+            <div class="nickname">B</div>
+            <div class="score">9500점</div>
+        </div>
+        <div class="rank-item rank-1">
+            <span class="medal">🥇</span>
+            <div class="nickname">A</div>
+            <div class="score">10000점</div>
+        </div>
+        <div class="rank-item rank-3">
+            <span class="medal">🥉</span>
+            <div class="nickname">C</div>
+            <div class="score">9000점</div>
+        </div>
+    </div>
+
+    <table class="ranking-list">
+        <thead>
+            <tr>
+                <th>순위</th>
+                <th>닉네임</th>
+                <th>총점</th>
+                </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="rank-num">1</td>
+                <td class="rank-nickname">A</td>
+                <td class="rank-score">10000</td>
+                </tr>
+            <tr class="my-rank">
+                <td class="rank-num">2</td>
+                <td class="rank-nickname">B</td>
+                <td class="rank-score">9500</td>
+                </tr>
+            <tr>
+                <td class="rank-num">3</td>
+                <td class="rank-nickname">C</td>
+                <td class="rank-score">9000</td>
+                </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <a href="#">&laquo;</a>
+        <a href="#" class="active">1</a>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <a href="#">&raquo;</a>
+    </div>
+</main>
+
+<script src="ranking.js"></script>
 </body>
 </html>

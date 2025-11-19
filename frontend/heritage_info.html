@@ -3,16 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
-    <title>문화재 상세 정보</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        /* (생략: 기존 CSS 스타일 유지) */
-=======
     <title>문화재 정보</title>
     <link rel="stylesheet" href="styles.css">
     <style>
->>>>>>> 26ba20430caf5ffa867b29f65396708b6c0c50da
          body {
             /* Req 3: flex로 중앙 정렬 */
             display: flex;
@@ -102,17 +95,6 @@
 </footer>
 
 <script>
-<<<<<<< HEAD
-    // --- 백엔드에서 받아올 모든 상세 데이터 (시뮬레이션) ---
-    // 실제로는 서버에서 ID에 해당하는 하나의 데이터만 받아옵니다.
-    const allHeritageDetails = [
-        // ID는 heritage_list.html에서 넘겨준 ID와 일치해야 합니다.
-        { 
-            id: '331', 
-            name: '경주 불국사 다보탑', 
-            image: 'images/dabotap.png', // 실제 이미지 경로로 수정 필요
-            description: `불국사는 통일신라 경덕왕 10년(751) 김대성의 발원에 의해 창건된 사찰로, 과거·현재·미래의 부처가 사는 정토(淨土), 즉 이상향을 구현하고자 했던 신라인들의 정신세계가 잘 드러나 있는 곳이다.『삼국유사』에는 김대성이 전생의 부모를 위해서 석굴암을, 현생의 부모를 위해서 불국사를 지었다고 전해진다. 그러나 그가 목숨을 다할 때까지 짓지 못하여 그 후 나라에서 완성하여 나라의 복을 비는 절로 삼게 되었다.
-=======
         // DOM(HTML)이 모두 로드된 후 스크립트 실행
         document.addEventListener('DOMContentLoaded', () => {
             
@@ -125,7 +107,6 @@
                 name: '경주 불국사 다보탑', 
                 image: 'http://www.cha.go.kr/unisearch/images/national_tre',
                 description: `불국사는 통일신라 경덕왕 10년(751) 김대성의 발원에 의해 창건된 사찰로, 과거·현재·미래의 부처가 사는 정토(淨土), 즉 이상향을 구현하고자 했던 신라인들의 정신세계가 잘 드러나 있는 곳이다.『삼국유사』에는 김대성이 전생의 부모를 위해서 석굴암을, 현생의 부모를 위해서 불국사를 지었다고 전해진다. 그러나 그가 목숨을 다할 때까지 짓지 못하여 그 후 나라에서 완성하여 나라의 복을 비는 절로 삼게 되었다.
->>>>>>> 26ba20430caf5ffa867b29f65396708b6c0c50da
 
 다보탑과 석가탑(경주 불국사 삼층석탑, 국보)은 우리나라의 가장 대표적인 석탑으로, 높이도 10.29m, 10.75m로 비슷하다. 절내의 대웅전과 자하문 사이의 뜰 동서쪽에 마주 보고 서 있는데, 동쪽탑이 다보탑이다. 다보탑은 특수형 탑을, 석가탑은 우리나라 일반형 석탑을 대표한다고 할 수 있다. 두 탑을 같은 위치에 세운 이유는 ‘과거의 부처’인 다보불(多寶佛)이 ‘현재의 부처’인 석가여래가 설법할 때 옆에서 옳다고 증명한다는『법화경』의 내용을 눈으로 직접 볼 수 있게 탑으로 구현하고자 하기 위함이다. 
 
@@ -134,56 +115,6 @@
 탑이 건립된 시기는 불국사가 창건된 통일신라 경덕왕 10년(751)으로 추측된다. 목조건축의 복잡한 구조를 참신한 발상을 통해 산만하지 않게 표현한 뛰어난 작품으로, 4각, 8각, 원을 한 탑에서 짜임새있게 구성한 점, 각 부분의 길이·너비·두께를 일정하게 통일시킨 점 등은 8세기 통일신라 미술의 정수를 보여주고 있다. 
 
 안타깝게도 다보탑에는 일제에 나라를 빼앗겼던 설움이 고스란히 전해져 온다. 1925년경에 일본인들이 탑을 완전히 해체, 보수하였는데, 이에 관한 기록이 전혀 남아 있지 않다. 또한 탑 속에 두었을 사리와 사리장치, 그 밖의 유물들이 이 과정에서 모두 사라져버려 그 행방을 알 수 없게 되었다. 그리고 기단의 돌계단 위에 놓여있던 네 마리의 돌사자 가운데 3마리가 일제에 의해 약탈되어, 이를 되찾기 위한 노력이 오래전부터 있었으나 아직까지 그 행방을 알 수가 없으며, 현재 1마리의 돌사자가 남아있다.`
-<<<<<<< HEAD
-        },
-        {
-            id: '320', 
-            name: '경주 천마총 장니 천마도', 
-            image: 'images/chunmado.png', 
-            description: `신라 고분인 천마총에서 발견된 말다래(장니)에 그려진 천마 그림이다. 신라의 회화 수준을 보여주는 귀중한 자료이다.`
-        },
-        // 여기에 heritage_list.html의 나머지 모든 문화재 상세 정보를 추가해야 합니다.
-    ];
-    // --- 데이터 시뮬레이션 끝 ---
-
-    document.addEventListener('DOMContentLoaded', () => {
-        
-        // 1. URL에서 쿼리 파라미터(id)를 가져옵니다.
-        const urlParams = new URLSearchParams(window.location.search);
-        const heritageId = urlParams.get('id'); 
-
-        let detailData = null;
-
-        if (heritageId) {
-            // 2. ID를 기반으로 해당 문화재의 데이터를 찾습니다.
-            detailData = allHeritageDetails.find(item => item.id === heritageId);
-        }
-
-        // 3. 데이터를 찾았다면 화면에 표시합니다.
-        if (detailData) {
-            const container = document.getElementById('detail-content');
-            container.innerHTML = `
-                <img src="${detailData.image}" alt="${detailData.name}" class="detail-image">
-                
-                <h2 class="detail-name">${detailData.name}</h2>
-                
-                <p class="detail-description">${detailData.description}</p>
-            `;
-        } else {
-            // ID가 유효하지 않거나 데이터를 찾지 못한 경우 처리
-            document.getElementById('detail-content').innerHTML = `
-                <h2 class="detail-name">오류</h2>
-                <p class="detail-description">문화재 정보를 불러오는 데 실패했습니다. ID: ${heritageId}</p>
-                <button onclick="location.href='heritage_list.html'">목록으로 돌아가기</button>
-            `;
-        }
-    });
-</script>
-<script src="js/heritage.js"></script>
-<script src="js/main.js"></script>
-</body>
-</html>
-=======
             };
             // --- 데이터 시뮬레이션 끝 ---
 
@@ -205,4 +136,3 @@
 <script src="js/main.js"></script>
 </body>
 </html>
->>>>>>> 26ba20430caf5ffa867b29f65396708b6c0c50da

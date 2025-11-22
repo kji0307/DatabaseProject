@@ -1,46 +1,353 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>게임 방 목록</title>
-        <link rel="stylesheet" href="styles.css"> 
-</head>
-<body>
+    <meta charset="UTF-8">
+    <title>게임 방 목록</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 0;
+        }
+
+        .room-list-wrapper {
+            width: 90%;
+            max-width: 1100px;
+            background: rgba(10, 20, 40, 0.9);
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            color: #fff;
+        }
+
+        .room-list-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .room-list-header-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-right: auto;
+        }
+
+        .room-list-header button,
+        .room-list-header input {
+            border-radius: 4px;
+            border: none;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn,
+        .filter-btn {
+            background: #2f7fd6;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .refresh-btn:hover,
+        .filter-btn:hover {
+            background: #4d95e5;
+        }
+
+        .search-input {
+            min-width: 200px;
+        }
+
+        .create-btn {
+            background: #ff9f3c;
+            color: #222;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .create-btn:hover {
+            background: #ffb562;
+        }
+
+        .room-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .room-table thead {
+            background: #2768c5;
+        }
+
+        .room-table th,
+        .room-table td {
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        .room-table tbody tr {
+            background: rgba(15, 25, 50, 0.95);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer;
+        }
+
+        .room-table tbody tr:hover {
+            background: rgba(35, 55, 100, 0.95);
+        }
+
+        .enter-btn {
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: none;
+            background: #2ecc71;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .enter-btn:hover {
+            background: #46e485;
+        }
+
+        footer {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
 <header class="navbar">
-    <div class="nav-container">
-        <h1 class="logo"><a href="index.html">경주 문화재 게임</a></h1>
-        <nav>
-            <ul class="nav-menu">
-                <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
-                <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
-                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
-                <li><a href="login.html" class="nav-link">로그인</a></li>
-                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
-            </ul>
-        </nav>
-    </div>
+    <div class="nav-container">
+        <h1 class="logo"><a href="index.html">🎭 경주 문화재 라이어 게임</a></h1>
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
+                <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
+                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                <li id="login-menu"><a href="login.html" class="nav-link">로그인</a></li>
+                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+            </ul>
+        </nav>
+    </div>
 </header>
 
-<section class="room-list-section">
-    <div class="room-menu">
-                <button class="menu-btn" onclick="alert('방 만들기 기능 구현 예정')">방 만들기</button>
-        <button class="menu-btn">대기방 입장</button>
-        <button class="menu-btn">모든 방 보기</button>
-        <button class="menu-btn">혼자 놀기</button>
-    </div>
+<main>
+    <div class="room-list-wrapper">
+        <div class="room-list-header">
+            <div class="room-list-header-title">게임 방 목록</div>
+            <button class="refresh-btn" id="refresh-btn">↻ 새로고침</button>
+            <button class="filter-btn" id="filter-btn">필터</button>
+            <input type="text" class="search-input" id="search-input" placeholder="방 이름 검색">
+            <button class="create-btn" id="create-btn">+ 만들기</button>
+        </div>
 
-        <div id="roomGrid" class="rooms-container">
-            </div>
-    
-        <div id="empty" style="display:none; text-align:center; padding: 20px; color: white;">방이 없습니다</div>
+        <table class="room-table">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">방 제목</th>
+                    <th style="width: 12%;">모드</th>
+                    <th style="width: 20%;">주제</th>
+                    <th style="width: 10%;">인원</th>
+                    <th style="width: 10%;">상태</th>
+                    <th style="width: 10%;">방장</th>
+                    <th style="width: 8%; text-align:center;">입장</th>
+                </tr>
+            </thead>
+            <tbody id="room-table-body"></tbody>
+        </table>
+    </div>
+</main>
 
-    <footer class="chat-footer">
-        <input type="text" placeholder="채팅 입력..." class="chat-input"/>
-    </footer>
+<footer>
+    <p style="text-align:center; color:#fff; padding:10px 0;">
+        &copy; 2025 경주 문화재 게임 | 제작: 지혁,창민,성민
+    </p>
+</footer>
 
-</section>
+<script src="js/auth.js"></script>
 
-<script src="lobby.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const API_BASE_URL = "http://localhost:3000";
+
+    const tbody = document.getElementById("room-table-body");
+    const createBtn = document.getElementById("create-btn");
+    const refreshBtn = document.getElementById("refresh-btn");
+    const searchInput = document.getElementById("search-input");
+
+    let allRooms = [];
+
+    // -------------------------------
+    // 방 목록 불러오기
+    // -------------------------------
+    async function loadRooms() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/game/rooms`);
+            const rooms = await res.json();
+            allRooms = rooms;
+            renderRooms(rooms);
+        } catch (err) {
+            console.error("방 목록 불러오기 실패:", err);
+            showPopup("방 목록을 불러오지 못했습니다.", {
+                title: "오류",
+                type: "error"
+            });
+        }
+    }
+
+    // -------------------------------
+    // 방 목록 테이블 랜더링
+    // -------------------------------
+    function renderRooms(list) {
+        tbody.innerHTML = "";
+
+        list.forEach(room => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${room.roomTitle}</td>
+                <td>라이어게임</td>
+                <td>문화재</td>
+                <td>${room.playerCount}</td>
+                <td>${room.isActive ? "대기" : "종료"}</td>
+                <td>${room.hostName}</td>
+                <td style="text-align:center;">
+                    <button class="enter-btn">입장</button>
+                </td>
+            `;
+
+            const enterBtn = tr.querySelector(".enter-btn");
+            enterBtn.addEventListener("click", () => enterRoom(room.roomID));
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // -------------------------------
+    // 방 입장
+    // -------------------------------
+    async function enterRoom(roomID) {
+        const userStr = localStorage.getItem("user");
+        if (!userStr) {
+            showPopup("로그인이 필요합니다!", {
+                title: "로그인 필요",
+                type: "error",
+                redirectUrl: "login.html"
+            });
+            return;
+        }
+        const user = JSON.parse(userStr);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/game/join`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ roomID, userID: user.id }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                showPopup(data.message || "입장 실패", {
+                    title: "입장 실패",
+                    type: "error"
+                });
+                return;
+            }
+
+            window.location.href = `game_room.html?roomID=${roomID}`;
+        } catch (err) {
+            console.error("방 참가 실패:", err);
+            showPopup("서버 연결에 실패했습니다.", {
+                title: "입장 오류",
+                type: "error"
+            });
+        }
+    }
+
+    // -------------------------------
+    // 방 생성 (공통 팝업 UI 사용)
+    // -------------------------------
+    createBtn.addEventListener("click", () => {
+        const userStr = localStorage.getItem("user");
+        if (!userStr) {
+            showPopup("로그인이 필요합니다!", {
+                title: "로그인 필요",
+                type: "error",
+                redirectUrl: "login.html"
+            });
+            return;
+        }
+
+        const user = JSON.parse(userStr);
+        const hostID = user.id;
+
+        showInputPopup("방 제목을 입력하세요:", {
+            title: "방 만들기",
+            type: "success",
+            placeholder: "방 제목 입력",
+            confirmText: "만들기",
+            cancelText: "취소",
+            onSubmit: async (roomTitle) => {
+                if (!roomTitle) return;
+
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/game/create`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ hostID, roomTitle })
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        showPopup(data.message || "방 생성 실패", {
+                            title: "방 생성 실패",
+                            type: "error"
+                        });
+                        return;
+                    }
+
+                    showPopup("방이 성공적으로 생성되었습니다!", {
+                        title: "완료",
+                        type: "success",
+                        onClose: () => {
+                            window.location.href = `game_room.html?roomID=${data.roomID}`;
+                        }
+                    });
+                } catch (err) {
+                    console.error("방 생성 오류:", err);
+                    showPopup("서버 연결 실패!", {
+                        title: "오류",
+                        type: "error"
+                    });
+                }
+            }
+        });
+    });
+
+    // 검색 기능
+    searchInput.addEventListener("input", () => {
+        const keyword = searchInput.value.toLowerCase();
+        renderRooms(allRooms.filter(room =>
+            room.roomTitle.toLowerCase().includes(keyword)
+        ));
+    });
+
+    refreshBtn.addEventListener("click", loadRooms);
+
+    loadRooms();
+});
+</script>
+
 </body>
 </html>

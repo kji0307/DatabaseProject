@@ -777,5 +777,157 @@ form button:hover {
     background-color: #e6f7ff; /* 호버 효과 */
 }
 
+/* ================== Auth Forms ================== */
+.form-container {
+    min-height: calc(100vh - 80px); /* 헤더/푸터 제외한 영역 채우기 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.form-card {
+    width: 100%;
+    max-width: 400px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    padding: 30px 24px;
+}
+
+.form-title {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    text-align: center;
+    color: #2a3a5e;
+}
+
+.form-subtitle {
+    font-size: 0.9rem;
+    text-align: center;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #f4a261;
+    box-shadow: 0 0 0 2px rgba(244,162,97,0.25);
+}
+
+.form-button {
+    width: 100%;
+    padding: 10px 0;
+    border-radius: 6px;
+    border: none;
+    background-color: #f4a261;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.form-button:hover {
+    background-color: #e76f51;
+    transform: translateY(-1px);
+}
+
+.form-footer-text {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.form-footer-text a {
+    color: #e76f51;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.form-footer-text a:hover {
+    text-decoration: underline;
+}
+
+/* ===== 공통 팝업(모달) ===== */
+.app-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;              /* 기본은 숨김 */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.app-popup {
+  background: #fffaf2;        /* 전체 배경이랑 어울리는 크림색 */
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  padding: 24px 28px;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+  font-family: inherit;
+}
+
+.app-popup-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2a3a5e;
+}
+
+.app-popup-message {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 18px;
+}
+
+.app-popup-button {
+  min-width: 80px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #f4a261;
+  color: white;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.app-popup-button:hover {
+  background: #e76f51;
+  transform: translateY(-1px);
+}
+
+/* 성공 / 실패 색상 차이 주고 싶다면 */
+.app-popup-success .app-popup-title {
+  color: #2e7d32;
+}
+.app-popup-error .app-popup-title {
+  color: #c62828;
+}
 
 

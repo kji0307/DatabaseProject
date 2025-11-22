@@ -8,14 +8,14 @@
 <body>
 <header class="navbar">
     <div class="nav-container">
-        <h1 class="logo"><a href="index.html">경주 문화재 퀴즈</a></h1>
+        <h1 class="logo"><a href="index.html">경주 문화재</a></h1>
         <nav>
             <ul class="nav-menu">
                 <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
-                
                 <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
                 <li><a href="ranking.html" class="nav-link">랭킹</a></li>
-                <li><a href="login.html" class="nav-link">로그인</a></li>
+                <!-- ✅ 여기서도 id 추가 -->
+                <li id="login-menu"><a href="login.html" class="nav-link">로그인</a></li>
                 <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
             </ul>
         </nav>
@@ -23,22 +23,36 @@
 </header>
 
 <main class="form-container">
-    <h2>회원가입</h2>
-    <form id="signupForm" onsubmit="event.preventDefault(); signupUser();">
-        <div class="form-group">
-            <label for="username">아이디</label>
-            <input type="text" id="username" required>
-        </div>
+    <div class="form-card">
+        <h2 class="form-title">회원가입</h2>
+        <p class="form-subtitle">간단한 정보만 입력하면 라이어 게임을 즐길 수 있어요.</p>
 
-        <div class="form-group">
-            <label for="password">비밀번호</label>
-            <input type="password" id="password" required>
-        </div>
+        <form id="signupForm" onsubmit="event.preventDefault(); signupUser();">
+            <div class="form-group">
+                <label for="username">유저이름</label>
+                <input type="text" id="username" placeholder="유저이름을 입력하세요" required>
+            </div>
 
-        <button type="submit">회원가입</button>
-    </form>
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" placeholder="비밀번호를 입력하세요" required>
+            </div>
+
+            <button type="submit" class="form-button">회원가입</button>
+        </form>
+
+        <p class="form-footer-text">
+            이미 계정이 있으신가요?
+            <a href="login.html">로그인 하러가기</a>
+        </p>
+    </div>
 </main>
 
+<footer>
+    <p>© 2025 경주 문화재 게임 | 제작: 지혁,창민,성민</p>
+</footer>
+
+<!-- ✅ JWT 연동 스크립트 -->
 <script src="js/auth.js"></script>
 </body>
 </html>

@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // -------------------------------
-    // 방 목록 테이블 랜더링
+    // 방 목록 테이블 렌더링
     // -------------------------------
     function renderRooms(list) {
         tbody.innerHTML = "";
@@ -276,9 +276,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // -------------------------------
-    // 방 생성 (공통 팝업 UI 사용)
+    // 방 생성 (브라우저 기본 prompt 사용)
     // -------------------------------
-    createBtn.addEventListener("click", () => {
+    createBtn.addEventListener("click", async () => {
         const userStr = localStorage.getItem("user");
         if (!userStr) {
             showPopup("로그인이 필요합니다!", {
@@ -292,48 +292,42 @@ document.addEventListener("DOMContentLoaded", () => {
         const user = JSON.parse(userStr);
         const hostID = user.id;
 
-        showInputPopup("방 제목을 입력하세요:", {
-            title: "방 만들기",
-            type: "success",
-            placeholder: "방 제목 입력",
-            confirmText: "만들기",
-            cancelText: "취소",
-            onSubmit: async (roomTitle) => {
-                if (!roomTitle) return;
+        const roomTitle = window.prompt("방 제목을 입력하세요:");
+        if (!roomTitle || roomTitle.trim() === "") {
+            return; // 취소 또는 빈 입력
+        }
 
-                try {
-                    const res = await fetch(`${API_BASE_URL}/api/game/create`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ hostID, roomTitle })
-                    });
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/game/create`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ hostID, roomTitle: roomTitle.trim() })
+            });
 
-                    const data = await res.json();
+            const data = await res.json();
 
-                    if (!res.ok) {
-                        showPopup(data.message || "방 생성 실패", {
-                            title: "방 생성 실패",
-                            type: "error"
-                        });
-                        return;
-                    }
-
-                    showPopup("방이 성공적으로 생성되었습니다!", {
-                        title: "완료",
-                        type: "success",
-                        onClose: () => {
-                            window.location.href = `game_room.html?roomID=${data.roomID}`;
-                        }
-                    });
-                } catch (err) {
-                    console.error("방 생성 오류:", err);
-                    showPopup("서버 연결 실패!", {
-                        title: "오류",
-                        type: "error"
-                    });
-                }
+            if (!res.ok) {
+                showPopup(data.message || "방 생성 실패", {
+                    title: "방 생성 실패",
+                    type: "error"
+                });
+                return;
             }
-        });
+
+            showPopup("방이 성공적으로 생성되었습니다!", {
+                title: "완료",
+                type: "success",
+                onClose: () => {
+                    window.location.href = `game_room.html?roomID=${data.roomID}`;
+                }
+            });
+        } catch (err) {
+            console.error("방 생성 오류:", err);
+            showPopup("서버 연결 실패!", {
+                title: "오류",
+                type: "error"
+            });
+        }
     });
 
     // 검색 기능

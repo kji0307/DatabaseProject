@@ -1,99 +1,236 @@
 // backend/src/socket.js
-// 라이어 게임 실시간 처리 socket.io 서버
+// 라이어 게임 실시간 엔진 (설명 → 토론 → 투표 → 최종판단 → 결과)
 
-module.exports = (io) => {
+const pool = require("./models/db");
 
-    // 모든 소켓 연결 시작
+module.exports = function setupGameSocket(io) {
+    const rooms = {}; 
+    // 구조:
+    // rooms[roomID] = {
+    //     speakingOrder: [],
+    //     currentSpeakerIndex: -1,
+    //     currentPhase: "waiting",
+    //     suspectID: null,
+    //     finalVotes: {}, 
+    // }
+
+    // 🔹 누군가 방에 입장
     io.on("connection", (socket) => {
-        console.log("🔌 소켓 연결됨:", socket.id);
+        console.log("🔌 New client connected:", socket.id);
 
-        // =========================
-        // 1) 방 참가
-        // =========================
-        socket.on("joinRoom", ({ roomID, userID, username }) => {
+        // ------------------------------
+        // 방 입장
+        // ------------------------------
+        socket.on("joinRoom", async ({ roomID, userID, username }) => {
+            roomID = String(roomID);
             socket.join(`room_${roomID}`);
             socket.roomID = roomID;
             socket.userID = userID;
             socket.username = username;
 
-            io.to(`room_${roomID}`).emit("systemMessage", {
-                type: "join",
-                text: `${username} 님이 방에 입장했습니다.`
-            });
+            console.log(`➡ ${username} (${userID}) joined room ${roomID}`);
 
-            console.log(`➡️ User ${username} (${userID}) joined room ${roomID}`);
+            // DB에서 최신 플레이어 목록 가져오기
+            const [players] = await pool.query(
+                `SELECT userID, username FROM user_tbl WHERE currentRoom = ?`,
+                [roomID]
+            );
+
+            // 방에 state 없으면 초기화
+            if (!rooms[roomID]) {
+                rooms[roomID] = {
+                    speakingOrder: [],
+                    currentSpeakerIndex: -1,
+                    currentPhase: "waiting",
+                    suspectID: null,
+                    finalVotes: {}
+                };
+            }
+
+            io.to(`room_${roomID}`).emit("playerUpdate", players);
+
+            io.to(`room_${roomID}`).emit("systemMessage", {
+                text: `${username} 님이 방에 입장했습니다.`,
+            });
         });
 
-        // =========================
-        // 2) 토론/해명 채팅
-        // =========================
-        socket.on("chatMessage", ({ roomID, userID, username, message }) => {
+        // ------------------------------
+        // 방 나가기
+        // ------------------------------
+        socket.on("leaveRoom", async ({ roomID, userID }) => {
+            roomID = String(roomID);
+            socket.leave(`room_${roomID}`);
+
+            console.log(`⬅ User ${userID} left room ${roomID}`);
+
+            // DB에서도 currentRoom 비우기
+            await pool.query(
+                `UPDATE user_tbl SET currentRoom = NULL WHERE userID = ?`,
+                [userID]
+            );
+
+            const [players] = await pool.query(
+                `SELECT userID, username FROM user_tbl WHERE currentRoom = ?`,
+                [roomID]
+            );
+
+            io.to(`room_${roomID}`).emit("playerUpdate", players);
+
+            io.to(`room_${roomID}`).emit("systemMessage", {
+                text: `${socket.username} 님이 방에서 나갔습니다.`,
+            });
+        });
+
+        // ------------------------------
+        // 채팅
+        // ------------------------------
+        socket.on("chatMessage", (data) => {
+            const { roomID, userID, username, message } = data;
             io.to(`room_${roomID}`).emit("chatMessage", {
                 userID,
                 username,
                 message,
-                time: new Date()
             });
         });
 
-        // =========================
-        // 3) 설명 순서 / 게임 상태 변화 브로드캐스트
-        // =========================
+        // ------------------------------
+        // 단계 업데이트 (호스트만 emit)
+        // ------------------------------
         socket.on("phaseUpdate", ({ roomID, phase, info }) => {
+            roomID = String(roomID);
+            console.log(`📢 phaseUpdate in room ${roomID}: ${phase}`);
+
+            // 서버에서 단계 기억
+            if (!rooms[roomID]) return;
+            rooms[roomID].currentPhase = phase;
+
             io.to(`room_${roomID}`).emit("phaseUpdate", { phase, info });
-            console.log(`📢 Phase update in room ${roomID}: ${phase}`);
         });
 
-        // =========================
-        // 4) 타이머 동기화
-        // =========================
-        socket.on("timerStart", ({ roomID, duration }) => {
-            io.to(`room_${roomID}`).emit("timerStart", { duration });
+        // ------------------------------
+        // 설명 단계 랜덤 순서 설정 (호스트만)
+        // ------------------------------
+        socket.on("setSpeakingOrder", ({ roomID, order }) => {
+            roomID = String(roomID);
+            if (!rooms[roomID]) return;
+
+            rooms[roomID].speakingOrder = order;
+            rooms[roomID].currentSpeakerIndex = -1;
+
+            console.log(`🔀 Speaking order for room ${roomID}:`, order);
         });
 
-        socket.on("timerTick", ({ roomID, remain }) => {
-            io.to(`room_${roomID}`).emit("timerTick", { remain });
-        });
+        // ------------------------------
+        // 다음 설명자 호출 (호스트만)
+        // ------------------------------
+        socket.on("nextSpeaker", ({ roomID }) => {
+            roomID = String(roomID);
+            if (!rooms[roomID]) return;
 
-        socket.on("timerEnd", ({ roomID }) => {
-            io.to(`room_${roomID}`).emit("timerEnd");
-        });
+            const state = rooms[roomID];
+            const order = state.speakingOrder;
 
-        // =========================
-        // 5) 용의자 결정 / 최종판단 알림
-        // =========================
-        socket.on("suspectSelected", ({ roomID, suspectID, suspectName }) => {
-            io.to(`room_${roomID}`).emit("suspectSelected", {
-                suspectID,
-                suspectName
+            state.currentSpeakerIndex++;
+
+            // 모두 설명 끝
+            if (state.currentSpeakerIndex >= order.length) {
+                console.log(`🟦 설명 완료 → 토론 단계 전환`);
+                io.to(`room_${roomID}`).emit("phaseUpdate", {
+                    phase: "discussionStart",
+                    info: {}
+                });
+                return;
+            }
+
+            // 다음 설명자
+            const speakerID = order[state.currentSpeakerIndex];
+
+            console.log(`🟦 설명 차례: user ${speakerID}`);
+
+            io.to(`room_${roomID}`).emit("phaseUpdate", {
+                phase: "explainTurn",
+                info: { speakerID }
             });
         });
 
-        socket.on("finalVoteCompleted", ({ roomID, result }) => {
-            io.to(`room_${roomID}`).emit("finalVoteCompleted", result);
+        // ------------------------------
+        // 1차 투표에서 1위 나온 사람 저장
+        // ------------------------------
+        socket.on("setSuspect", ({ roomID, suspectID }) => {
+            roomID = String(roomID);
+            if (!rooms[roomID]) return;
+
+            rooms[roomID].suspectID = suspectID;
         });
 
-        // =========================
-        // 6) 방 폭파 (호스트 퇴장 시)
-        // =========================
-        socket.on("roomClosed", ({ roomID }) => {
-            io.to(`room_${roomID}`).emit("roomClosed");
-            io.in(`room_${roomID}`).socketsLeave(`room_${roomID}`);
+        // ------------------------------
+        // 최종 이지선다 투표
+        // ------------------------------
+        socket.on("finalChoiceVote", ({ roomID, userID, choice }) => {
+            roomID = String(roomID);
+            if (!rooms[roomID]) return;
+
+            const state = rooms[roomID];
+            // choice = "guilty" 또는 "innocent"
+            state.finalVotes[userID] = choice;
         });
 
-        // =========================
-        // 7) 소켓 연결 해제
-        // =========================
-        socket.on("disconnect", () => {
-            console.log("❌ 소켓 연결 해제:", socket.id);
+        // ------------------------------
+        // 최종 이지선다 결과 요청
+        // ------------------------------
+        socket.on("finalChoiceResult", ({ roomID }) => {
+            roomID = String(roomID);
+            const state = rooms[roomID];
+            if (!state) return;
 
-            if (socket.roomID) {
-                io.to(`room_${socket.roomID}`).emit("systemMessage", {
-                    type: "leave",
-                    text: `${socket.username || "유저"} 님이 퇴장했습니다.`
-                });
-            }
+            const votes = state.finalVotes;
+            const values = Object.values(votes);
+
+            const guiltyCount = values.filter(v => v === "guilty").length;
+            const innocentCount = values.filter(v => v === "innocent").length;
+
+            console.log(`🟥 최종판단 결과 in room ${roomID}:`, {
+                guiltyCount,
+                innocentCount
+            });
+
+            io.to(`room_${roomID}`).emit("finalChoiceResult", {
+                guiltyCount,
+                innocentCount,
+                suspectID: state.suspectID
+            });
+
+            // 상태 초기화
+            state.finalVotes = {};
+        });
+
+        // ------------------------------
+        // 소켓 연결 종료
+        // ------------------------------
+        socket.on("disconnect", async () => {
+            if (!socket.roomID || !socket.userID) return;
+
+            const roomID = socket.roomID;
+            const userID = socket.userID;
+
+            console.log(`❌ Disconnect user ${userID}`);
+
+            // DB 비우기
+            await pool.query(
+                `UPDATE user_tbl SET currentRoom = NULL WHERE userID = ?`,
+                [userID]
+            );
+
+            const [players] = await pool.query(
+                `SELECT userID, username FROM user_tbl WHERE currentRoom = ?`,
+                [roomID]
+            );
+
+            io.to(`room_${roomID}`).emit("playerUpdate", players);
+
+            io.to(`room_${roomID}`).emit("systemMessage", {
+                text: `${socket.username} 님이 연결 종료됨`,
+            });
         });
     });
-
 };

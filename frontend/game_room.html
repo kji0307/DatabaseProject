@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>게임 대기방 / 라이어 게임</title>
+    <title>라이어 게임 - 게임 화면</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         body {
@@ -11,56 +11,84 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            background: radial-gradient(circle at top, #1f2a48, #050816);
+            color: #fff;
+            font-family: "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
+
         main {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: stretch;
-            padding: 20px 0;
+            padding: 20px 0 30px;
         }
+
         .room-wrapper {
-            width: 90%;
-            max-width: 1100px;
+            width: 92%;
+            max-width: 1200px;
             display: grid;
-            grid-template-columns: 1.2fr 1.8fr;
-            gap: 16px;
+            grid-template-columns: 1.1fr 1.9fr;
+            gap: 18px;
         }
+
         .panel {
-            background: rgba(15, 25, 50, 0.95);
-            border-radius: 10px;
-            padding: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            color: #fff;
+            background: rgba(7, 14, 32, 0.95);
+            border-radius: 14px;
+            padding: 16px 16px 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.04);
         }
+
         .panel-title {
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
+
+        /* 왼쪽: 방 정보 + 참가자 */
+        .room-info {
+            font-size: 0.92rem;
+            line-height: 1.4;
+        }
+
+        .room-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
         .player-list {
             list-style: none;
             padding: 0;
-            margin: 0;
-            max-height: 260px;
+            margin: 8px 0 0;
+            max-height: 340px;
             overflow-y: auto;
         }
+
         .player-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 6px 8px;
             margin-bottom: 4px;
-            background: rgba(30,45,80,0.9);
-            border-radius: 4px;
+            background: rgba(22, 33, 68, 0.95);
+            border-radius: 5px;
             font-size: 0.9rem;
         }
-        .player-item.host span {
+
+        .player-item.host span:first-child {
             color: #f1c40f;
         }
 
+        .player-tag {
+            font-size: 0.78rem;
+            opacity: 0.8;
+        }
+
+        /* 오른쪽 상단: 헤더 + 제시어 영역 */
         .game-header {
             display: flex;
             flex-direction: column;
@@ -68,22 +96,42 @@
             margin-bottom: 10px;
             font-size: 0.9rem;
         }
+
         .game-header-row {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer-display {
+            font-size: 0.95rem;
+            color: #ffb347;
+        }
+
+        .phase-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            background: rgba(76, 175, 80, 0.12);
+            border: 1px solid rgba(76, 175, 80, 0.6);
+            color: #a5ffb0;
         }
 
         .game-main-text {
             margin-top: 8px;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
+            margin-bottom: 5px;
+            font-size: 1rem;
             min-height: 24px;
         }
+
         .game-topic-text {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: #f1c40f;
             min-height: 20px;
         }
+
         .game-info-text {
             font-size: 0.9rem;
             color: #c9d6ff;
@@ -95,73 +143,130 @@
             display: flex;
             gap: 8px;
         }
+
         .game-btn {
             padding: 8px 14px;
-            border-radius: 6px;
+            border-radius: 999px;
             border: none;
             cursor: pointer;
             font-size: 0.9rem;
         }
+
         .start-btn {
-            background: #2ecc71;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
             color: #fff;
         }
-        .reveal-btn {
-            background: #e67e22;
-            color: #fff;
-            display: none;
+
+        .start-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
         }
+
         .exit-btn {
             background: #c0392b;
             color: #fff;
         }
 
-        .timer-display {
-            font-size: 0.9rem;
-            color: #ffb347;
+        .reveal-btn {
+            background: #e67e22;
+            color: #fff;
+            display: none; /* 필요 시 활성화 */
         }
 
+        /* 설명 요약 영역 */
+        .explain-panel {
+            margin-top: 12px;
+            background: rgba(9, 20, 50, 0.95);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.86rem;
+        }
+
+        .explain-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .explain-list {
+            max-height: 80px;
+            overflow-y: auto;
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .explain-list li {
+            margin-bottom: 2px;
+        }
+
+        /* 투표 영역 */
         .vote-area {
             margin-top: 10px;
             min-height: 40px;
         }
+
+        .vote-section-title {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
         .vote-btn {
-            margin: 2px;
+            margin: 3px 4px 3px 0;
             padding: 6px 10px;
-            border-radius: 4px;
+            border-radius: 999px;
             border: none;
             cursor: pointer;
             font-size: 0.85rem;
             background: #34495e;
             color: #ecf0f1;
         }
+
         .vote-btn.voted {
             background: #e74c3c;
         }
 
+        .final-choice-btn {
+            margin: 3px 4px 3px 0;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            font-size: 0.85rem;
+            background: rgba(21, 32, 68, 0.95);
+            color: #ecf0f1;
+        }
+
+        .final-choice-btn.selected {
+            background: #9b59b6;
+        }
+
+        /* 로그 영역 */
         .log-area {
             margin-top: 10px;
             padding: 8px;
-            border-radius: 6px;
-            background: rgba(10, 20, 40, 0.9);
-            max-height: 160px;
+            border-radius: 8px;
+            background: rgba(3, 10, 30, 0.9);
+            max-height: 150px;
             overflow-y: auto;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
         }
+
         .log-entry {
             margin-bottom: 4px;
         }
+
         .log-entry span.time {
             color: #7f8c8d;
             margin-right: 4px;
         }
+
         .log-entry span.text {
             color: #ecf0f1;
         }
 
-        /* (채팅 UI를 이미 넣어둔 상태라면 여기 스타일도 있을 수 있음) */
+        /* 채팅 영역 */
         .chat-area {
-            margin-top: 10px;
+            margin-top: 12px;
             border-top: 1px solid rgba(255,255,255,0.08);
             padding-top: 8px;
             display: flex;
@@ -170,10 +275,10 @@
         }
 
         .chat-messages {
-            max-height: 120px;
+            max-height: 140px;
             overflow-y: auto;
             background: rgba(5, 15, 35, 0.9);
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 6px 8px;
             font-size: 0.85rem;
         }
@@ -188,8 +293,16 @@
             color: #f1c40f;
         }
 
+        .chat-name.system {
+            color: #95a5a6;
+        }
+
         .chat-text {
             color: #ecf0f1;
+        }
+
+        .chat-text.mine {
+            color: #a5d6ff;
         }
 
         .chat-input-row {
@@ -199,16 +312,17 @@
 
         #chat-input {
             flex: 1;
-            padding: 6px 8px;
-            border-radius: 6px;
+            padding: 7px 9px;
+            border-radius: 999px;
             border: 1px solid #555;
             background: rgba(10,20,40,0.9);
             color: #ecf0f1;
+            font-size: 0.9rem;
         }
 
         #chat-send-btn {
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 7px 10px;
+            border-radius: 999px;
             border: none;
             background: #3498db;
             color: #fff;
@@ -218,6 +332,88 @@
 
         #chat-send-btn:hover {
             background: #2980b9;
+        }
+
+        /* 결과 카드 오버레이 */
+        .result-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .result-overlay.show {
+            display: flex;
+        }
+
+        .result-card {
+            background: radial-gradient(circle at top, #233a6b, #0b1020);
+            border-radius: 18px;
+            padding: 22px 26px;
+            min-width: 320px;
+            max-width: 420px;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.16);
+            text-align: center;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .result-outcome {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .result-liar {
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+
+        .result-word {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #f1c40f;
+        }
+
+        .result-detail {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            margin-bottom: 16px;
+        }
+
+        .result-btn-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .result-btn {
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .result-btn.primary {
+            background: #2ecc71;
+            color: #fff;
+        }
+
+        .result-btn.secondary {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+
+        footer {
+            width: 100%;
         }
     </style>
 </head>
@@ -241,49 +437,74 @@
 <main>
     <div class="room-wrapper">
 
-        <!-- LEFT PANEL -->
+        <!-- LEFT: 방 정보 + 참가자 목록 -->
         <div class="panel">
             <div class="panel-title">방 정보</div>
-            <div id="room-info">
-                <div>방 제목: <strong id="room-title">-</strong></div>
-                <div>방장: <span id="room-host">-</span></div>
-                <div>인원: <span id="room-count">0명</span></div>
+            <div class="room-info">
+                <div class="room-info-row">
+                    <span>방 제목</span>
+                    <strong id="room-title">-</strong>
+                </div>
+                <div class="room-info-row">
+                    <span>방장</span>
+                    <span id="room-host">-</span>
+                </div>
+                <div class="room-info-row">
+                    <span>인원</span>
+                    <span id="room-count">0명</span>
+                </div>
             </div>
 
             <div class="panel-title" style="margin-top:14px;">참가자 목록</div>
             <ul class="player-list" id="player-list"></ul>
         </div>
 
-        <!-- RIGHT PANEL -->
+        <!-- RIGHT: 게임 영역 -->
         <div class="panel game-panel">
             <div class="panel-title">라이어 게임</div>
 
+            <!-- 헤더 -->
             <div class="game-header">
                 <div class="game-header-row">
                     <div>라운드: <span id="round-info">0 / 5</span></div>
-                    <div>상태: <span id="phase-info">대기 중</span></div>
+                    <div class="phase-badge">현재 상태: <span id="phase-info" style="margin-left:4px;">대기 중</span></div>
                 </div>
                 <div class="game-header-row">
                     <div class="timer-display">남은 시간: <span id="timer-seconds">-</span>초</div>
                 </div>
             </div>
 
+            <!-- 제시어/역할 안내 -->
             <div id="game-question" class="game-main-text">
-                호스트가 게임을 시작하면 제시어가 표시됩니다.
+                호스트가 게임을 시작하면 제시어와 역할이 표시됩니다.
             </div>
             <div id="game-topic" class="game-topic-text"></div>
             <div id="game-info-text" class="game-info-text">- 게임 대기 중...</div>
 
+            <!-- 버튼 -->
             <div class="game-buttons">
                 <button class="game-btn start-btn" id="start-game-btn">게임 시작(호스트)</button>
                 <button class="game-btn reveal-btn" id="reveal-liar-btn">라이어 공개</button>
                 <button class="game-btn exit-btn" id="exit-room-btn">나가기</button>
             </div>
 
-            <div class="vote-area" id="vote-area"></div>
+            <!-- 설명 요약 -->
+            <div class="explain-panel">
+                <div class="explain-title">📝 설명 요약</div>
+                <ul class="explain-list" id="explain-summary">
+                    <!-- "1번 유저: 신라", "2번 유저: 멋있음" 형태로 누적 -->
+                </ul>
+            </div>
+
+            <!-- 투표/최종판단 영역 -->
+            <div class="vote-area" id="vote-area">
+                <!-- 1차 투표 버튼들 / 최종 2지선다 버튼들이 단계에 따라 렌더링됨 -->
+            </div>
+
+            <!-- 로그 -->
             <div class="log-area" id="log-area"></div>
 
-            <!-- 채팅 영역 (지금은 로직이 game.js에 없어서 UI만 있는 상태) -->
+            <!-- 채팅 -->
             <div class="chat-area">
                 <div class="chat-messages" id="chat-messages"></div>
                 <div class="chat-input-row">
@@ -292,7 +513,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 </main>
 
@@ -302,7 +522,21 @@
     </p>
 </footer>
 
-<!-- socket.io + 스크립트 -->
+<!-- 결과 카드 오버레이 -->
+<div class="result-overlay" id="result-overlay">
+    <div class="result-card">
+        <div class="result-title">게임 결과</div>
+        <div class="result-outcome" id="result-outcome">시민 승리!</div>
+        <div class="result-liar" id="result-liar-name">라이어: -</div>
+        <div class="result-word" id="result-word">제시어: -</div>
+        <div class="result-detail" id="result-detail">-</div>
+        <div class="result-btn-row">
+            <button class="result-btn primary" id="result-close-btn">로비로 돌아가기</button>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
 <script src="/socket.io/socket.io.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/game.js"></script>

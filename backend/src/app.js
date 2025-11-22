@@ -1,32 +1,55 @@
-require('dotenv').config();
-require('./models/db');
+// backend/src/app.js
+// Express + Socket.io 통합 서버 엔트리
 
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const authRoutes = require('./routes/authRoutes');
-const heritageRoutes = require('./routes/heritageRoutes');
-const gameRoutes = require('./routes/gameRoutes');
+const express = require("express");
+const http = require("http");
+const path = require("path");
+const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
+const server = http.createServer(app);
 
-// 미들웨어
+// Socket.io 서버 생성
+const { Server } = require("socket.io");
+const io = new Server(server, {
+    cors: {
+        origin: "*", // 개발 단계: 어디서든 접속 허용
+        methods: ["GET", "POST"]
+    }
+});
+
+// ====== 미들웨어 ======
 app.use(cors());
 app.use(express.json());
-app.use(morgan('dev'));
+app.use(express.urlencoded({ extended: true }));
 
-// 라우터
-app.use('/api/auth', authRoutes);
-app.use('/api/heritage', heritageRoutes);
-app.use('/api/game', gameRoutes);
+// (필요하다면 정적 파일 경로 추가)
+// app.use(express.static(path.join(__dirname, "..", "public")));
 
-// 기본 라우트
-app.get('/', (req, res) => {
-  res.send('🎭 Gyeongju Liar Game API — running');
+// ====== 라우터 연결 ======
+const gameRoutes = require("./routes/gameRoutes");
+// 기존에 auth, heritage 관련 라우터가 있었다면 여기에 다시 연결해주면 됨.
+// 예: const authRoutes = require("./routes/authRoutes");
+//     const heritageRoutes = require("./routes/heritageRoutes");
+
+app.use("/api/game", gameRoutes);
+// app.use("/api/auth", authRoutes);
+// app.use("/api/heritage", heritageRoutes);
+
+// 헬스 체크용 엔드포인트
+app.get("/", (req, res) => {
+    res.send("Heritage Liar Game API 서버 동작 중");
 });
 
-// 서버 실행
+// ====== Socket.io 이벤트 설정 ======
+const setupGameSocket = require("./socket");
+setupGameSocket(io);
+
+// ====== 서버 시작 ======
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+server.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT} (http://localhost:${PORT})`);
 });
+
+module.exports = { app, server, io };

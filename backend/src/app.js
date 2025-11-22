@@ -25,12 +25,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ====== 정적 파일 서빙 설정 ======
-// __dirname: backend/src
-// ../../ → 프로젝트 루트 (index.html, game_lobby.html 등이 있는 위치)
-const staticRoot = path.join(__dirname, "../../");
+// __dirname = backend/src
+// ../../frontend = 프로젝트 루트 기준 frontend 폴더
+const FRONTEND_DIR = path.join(__dirname, "../../frontend");
 
-// /index.html, /game_lobby.html, /js/auth.js 등 정적 파일 제공
-app.use(express.static(staticRoot));
+// / → index.html, /game_lobby.html, /login.html 등 정적 파일 제공
+app.use(express.static(FRONTEND_DIR));
+
+// 루트(/)로 접속 시 frontend/index.html 반환
+app.get("/", (req, res) => {
+    res.sendFile(path.join(FRONTEND_DIR, "index.html"));
+});
 
 // ====== 라우터 연결 ======
 const gameRoutes = require("./routes/gameRoutes");
@@ -41,12 +46,7 @@ app.use("/api/game", gameRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/heritage", heritageRoutes);
 
-// ====== 루트(/)로 접속 시 index.html 반환 ======
-app.get("/", (req, res) => {
-    res.sendFile(path.join(staticRoot, "index.html"));
-});
-
-// 헬스 체크용 엔드포인트 (원하면 남겨두기)
+// 헬스 체크용 엔드포인트
 app.get("/health", (req, res) => {
     res.send("Heritage Liar Game API 서버 동작 중");
 });

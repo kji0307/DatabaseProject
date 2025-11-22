@@ -14,9 +14,12 @@
                 <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
                 <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
                 <li><a href="ranking.html" class="nav-link">랭킹</a></li>
-                <!-- ✅ 로그인/로그아웃 토글을 위해 id 추가 -->
+
+                <!-- 로그인/로그아웃 토글 -->
                 <li id="login-menu"><a href="login.html" class="nav-link">로그인</a></li>
-                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
+                <li id="logout-menu" style="display:none;">
+                    <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
+                </li>
             </ul>
         </nav>
     </div>
@@ -25,7 +28,7 @@
 <main class="form-container">
     <div class="form-card">
         <h2 class="form-title">로그인</h2>
-        <p class="form-subtitle">라 이어 게임과 문화재 정보를 이용하려면 로그인이 필요합니다.</p>
+        <p class="form-subtitle">라이어 게임과 문화재 정보를 이용하려면 로그인이 필요합니다.</p>
 
         <form id="loginForm" onsubmit="event.preventDefault(); loginUser();">
             <div class="form-group">
@@ -52,7 +55,8 @@
     <p>© 2025 경주 문화재 게임 | 제작: 지혁,창민,성민</p>
 </footer>
 
-<!-- ✅ JWT 연동 스크립트 -->
+<!-- 로그인 기능 (Render API 연동) -->
 <script src="js/auth.js"></script>
 </body>
 </html>
+

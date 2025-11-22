@@ -178,7 +178,8 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const API_BASE_URL = "http://localhost:3000";
+    // 🔄 Render에 배포된 백엔드 URL 사용
+    const API_BASE_URL = "https://databaseproject-r39m.onrender.com";
 
     const tbody = document.getElementById("room-table-body");
     const createBtn = document.getElementById("create-btn");

@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const API_BASE_URL = "http://localhost:3000";
+    const API_BASE_URL = "https://databaseproject-r39m.onrender.com";
+    const socket = io("https://databaseproject-r39m.onrender.com");
+
 
     const params = new URLSearchParams(location.search);
     const roomID = params.get("roomID");

@@ -16,7 +16,7 @@ function getPopupOverlay() {
 function showPopup(message, options = {}) {
   const {
     title = "알림",
-    type = "success",    // 'success' | 'error'
+    type = "success",
     onClose = null,
     redirectUrl = null,
   } = options;
@@ -61,141 +61,10 @@ function showPopup(message, options = {}) {
   overlay.style.display = "flex";
 }
 
-// ✅ 확인/취소 팝업
-function showConfirmPopup(message, options = {}) {
-  const {
-    title = "확인",
-    type = "success",
-    confirmText = "확인",
-    cancelText = "취소",
-    onConfirm = null,
-    onCancel = null,
-  } = options;
-
-  const overlay = getPopupOverlay();
-
-  overlay.innerHTML = `
-    <div class="app-popup">
-      <div class="app-popup-title"></div>
-      <div class="app-popup-message"></div>
-      <div class="app-popup-buttons">
-        <button class="app-popup-button-ok"></button>
-        <button class="app-popup-button-cancel"></button>
-      </div>
-    </div>
-  `;
-
-  const popup = overlay.querySelector(".app-popup");
-  const titleEl = overlay.querySelector(".app-popup-title");
-  const msgEl = overlay.querySelector(".app-popup-message");
-  const okBtn = overlay.querySelector(".app-popup-button-ok");
-  const cancelBtn = overlay.querySelector(".app-popup-button-cancel");
-
-  popup.classList.remove("app-popup-success", "app-popup-error");
-  popup.classList.add(type === "error" ? "app-popup-error" : "app-popup-success");
-
-  titleEl.textContent = title;
-  msgEl.textContent = message;
-  okBtn.textContent = confirmText;
-  cancelBtn.textContent = cancelText;
-
-  const closePopup = () => {
-    overlay.style.display = "none";
-    okBtn.removeEventListener("click", handleOk);
-    cancelBtn.removeEventListener("click", handleCancel);
-  };
-
-  const handleOk = () => {
-    closePopup();
-    if (onConfirm) onConfirm();
-  };
-
-  const handleCancel = () => {
-    closePopup();
-    if (onCancel) onCancel();
-  };
-
-  okBtn.addEventListener("click", handleOk);
-  cancelBtn.addEventListener("click", handleCancel);
-
-  overlay.style.display = "flex";
-}
-
-// ✅ 입력 팝업 (텍스트 입력 + 확인/취소)
-function showInputPopup(message, options = {}) {
-  const {
-    title = "입력",
-    type = "success",
-    placeholder = "",
-    defaultValue = "",
-    confirmText = "확인",
-    cancelText = "취소",
-    onSubmit = null,
-    onCancel = null,
-  } = options;
-
-  const overlay = getPopupOverlay();
-
-  overlay.innerHTML = `
-    <div class="app-popup">
-      <div class="app-popup-title"></div>
-      <div class="app-popup-message"></div>
-      <div class="app-popup-input-wrap">
-        <input type="text" class="app-popup-input" />
-      </div>
-      <div class="app-popup-buttons">
-        <button class="app-popup-button-ok"></button>
-        <button class="app-popup-button-cancel"></button>
-      </div>
-    </div>
-  `;
-
-  const popup = overlay.querySelector(".app-popup");
-  const titleEl = overlay.querySelector(".app-popup-title");
-  const msgEl = overlay.querySelector(".app-popup-message");
-  const inputEl = overlay.querySelector(".app-popup-input");
-  const okBtn = overlay.querySelector(".app-popup-button-ok");
-  const cancelBtn = overlay.querySelector(".app-popup-button-cancel");
-
-  popup.classList.remove("app-popup-success", "app-popup-error");
-  popup.classList.add(type === "error" ? "app-popup-error" : "app-popup-success");
-
-  titleEl.textContent = title;
-  msgEl.textContent = message;
-  inputEl.placeholder = placeholder;
-  inputEl.value = defaultValue;
-  okBtn.textContent = confirmText;
-  cancelBtn.textContent = cancelText;
-
-  const closePopup = () => {
-    overlay.style.display = "none";
-    okBtn.removeEventListener("click", handleOk);
-    cancelBtn.removeEventListener("click", handleCancel);
-  };
-
-  const handleOk = () => {
-    const value = inputEl.value.trim();
-    closePopup();
-    if (onSubmit) onSubmit(value || null);
-  };
-
-  const handleCancel = () => {
-    closePopup();
-    if (onCancel) onCancel();
-  };
-
-  okBtn.addEventListener("click", handleOk);
-  cancelBtn.addEventListener("click", handleCancel);
-
-  overlay.style.display = "flex";
-  inputEl.focus();
-}
-
 // --------------------------
 // 🚪 메뉴 하이라이트 & 로그인 상태 표시
 // --------------------------
 document.addEventListener("DOMContentLoaded", function () {
-  // 메뉴 하이라이트
   const currentPage = location.pathname.split("/").pop();
   const navLinks = document.querySelectorAll(".nav-link");
 
@@ -205,7 +74,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // 로그인 상태에 따라 메뉴 토글
   const user = localStorage.getItem("user");
   const loginMenu = document.getElementById("login-menu");
   const logoutMenu = document.getElementById("logout-menu");
@@ -238,9 +106,12 @@ document.addEventListener("DOMContentLoaded", function () {
 // 🚀 JWT API 연결 기능 (회원가입 & 로그인)
 // --------------------------
 
-const BASE_URL = "http://localhost:3000"; // 백엔드 주소
+// 🔄 Render 서버로 변경됨!!!
+const BASE_URL = "https://databaseproject-r39m.onrender.com";
 
-// ✅ 회원가입
+// --------------------------
+// 📌 회원가입
+// --------------------------
 async function signupUser() {
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
@@ -283,7 +154,9 @@ async function signupUser() {
   }
 }
 
-// ✅ 로그인
+// --------------------------
+// 📌 로그인
+// --------------------------
 async function loginUser() {
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
@@ -306,9 +179,8 @@ async function loginUser() {
     const data = await res.json();
 
     if (res.ok) {
-      // ✅ JWT 토큰 및 사용자 정보 저장
       localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("token", data.token); // 백엔드가 token 보낼 경우
+      localStorage.setItem("token", data.token);
 
       showPopup(`로그인에 성공했습니다.\n환영합니다, ${data.user.username}님!`, {
         title: "로그인 성공",

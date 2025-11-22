@@ -15,8 +15,8 @@ const { Server } = require("socket.io");
 const io = new Server(server, {
     cors: {
         origin: "*", // 개발 단계: 어디서든 접속 허용
-        methods: ["GET", "POST"]
-    }
+        methods: ["GET", "POST"],
+    },
 });
 
 // ====== 미들웨어 ======
@@ -24,21 +24,24 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// (필요하다면 정적 파일 경로 추가)
-// app.use(express.static(path.join(__dirname, "..", "public")));
+// ====== 정적 파일 서빙 ======
+// docs/frontend 안의 js/css/images 를 /js, /css, /images 로 제공
+app.use(express.static(path.join(__dirname, "../../docs/frontend")));
+
+// 프로젝트 루트(index.html, game_lobby.html 등)도 정적 제공
+app.use(express.static(path.join(__dirname, "../../")));
 
 // ====== 라우터 연결 ======
 const gameRoutes = require("./routes/gameRoutes");
-// 기존에 auth, heritage 관련 라우터가 있었다면 여기에 다시 연결해주면 됨.
-// 예: const authRoutes = require("./routes/authRoutes");
-//     const heritageRoutes = require("./routes/heritageRoutes");
+const authRoutes = require("./routes/authRoutes");
+const heritageRoutes = require("./routes/heritageRoutes");
 
 app.use("/api/game", gameRoutes);
-// app.use("/api/auth", authRoutes);
-// app.use("/api/heritage", heritageRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/heritage", heritageRoutes);
 
-// 헬스 체크용 엔드포인트
-app.get("/", (req, res) => {
+// 헬스 체크용 엔드포인트 (이제는 /health 로 변경)
+app.get("/health", (req, res) => {
     res.send("Heritage Liar Game API 서버 동작 중");
 });
 

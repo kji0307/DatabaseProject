@@ -1,12 +1,12 @@
 // frontend/js/game.js
-// 라이어 게임 클라이언트 전체 로직 (채팅 + 단계 + 투표 + 최종 2지선다 + 결과 카드)
+// 라이어 게임 클라이언트 전체 로직 (채팅 + 단계 + 투표 + 최종 2지선다 + 멀티 라운드 + 결과 카드)
 
 document.addEventListener("DOMContentLoaded", () => {
     const API_BASE_URL = "https://databaseproject-r39m.onrender.com";
     const socket = io(API_BASE_URL);
 
     // ------------------------------
-    // URL / 유저 정보
+    // 기본 정보
     // ------------------------------
     const params = new URLSearchParams(location.search);
     const roomID = params.get("roomID");
@@ -58,9 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const phaseInfoEl = document.getElementById("phase-info");
     const timerSecEl = document.getElementById("timer-seconds");
 
-    const qEl = document.getElementById("game-question");
-    const topicEl = document.getElementById("game-topic");
-    const infoEl = document.getElementById("game-info-text");
+    const qEl = document.getElementById("game-question");   // 상태/안내 문구
+    const topicEl = document.getElementById("game-topic");  // 카테고리
+    const infoEl = document.getElementById("game-info-text"); // ✅ 내 제시어(시민/라이어 모두) - 게임 내내 유지!
 
     const startBtn = document.getElementById("start-game-btn");
     const revealBtn = document.getElementById("reveal-liar-btn");
@@ -86,10 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------
     const PHASE = {
         WAIT: "waiting",
-        EXPLAIN: "explain",
+        EXPLAIN: "explaining",
         DISCUSS: "discussion",
         VOTE: "voting",
         FINAL: "final",
+        ROUND_RESULT: "roundResult",
         RESULT: "result",
     };
 
@@ -103,7 +104,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let isLiar = false;
     let topicCategory = "";
-    let myWord = "";
+    let myWord = "";             // 실제로 받은 제시어 (시민은 진짜, 라이어는 가짜)
+    let myWordText = "";         // 화면에 보여줄 문구 (게임 내내 infoEl에 유지하기 위해)
 
     let speakingOrder = [];      // 설명 순서: [userID, ...]
     let currentSpeakerIndex = -1;
@@ -113,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let timerRemaining = 0;
 
     let myVoteTargetId = null;
-    let myFinalChoice = null; // "guilty" | "innocent" | null
+    let myFinalChoice = null;    // "guilty" or "innocent"
 
     let currentSuspectID = null;
     let currentSuspectName = null;
@@ -128,7 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
             case PHASE.DISCUSS: return "토론 단계";
             case PHASE.VOTE: return "1차 투표";
             case PHASE.FINAL: return "최종 판단";
-            case PHASE.RESULT: return "결과 발표";
+            case PHASE.ROUND_RESULT: return "라운드 결과";
+            case PHASE.RESULT: return "최종 결과";
             default: return phaseConst || "-";
         }
     }
@@ -287,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 startBtn.textContent = "게임 시작 (호스트만)";
             }
 
-            // 소켓으로 방 참가
+            // 소켓 join
             socket.emit("joinRoom", { roomID: Number(roomID), userID, username });
 
             addLog(`방에 입장했습니다. (호스트: ${room.hostName})`);
@@ -306,34 +309,39 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(
                 `${API_BASE_URL}/api/game/round/${roomID}/${userID}`
             );
+            const data = await res.json();
             if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
                 console.warn("제시어 불러오기 실패:", data.message || res.statusText);
                 return;
             }
 
-            const data = await res.json();
             isLiar = !!data.isLiar;
             topicCategory = data.topic || "";
             myWord = data.word || "";
             currentRound = data.currentRound || currentRound || 1;
             maxRounds = data.maxRounds || maxRounds || 5;
+            gameState = data.gameState || gameState;
             updateRoundAndPhaseUI();
 
+            // 카테고리 항상 표시
             topicEl.textContent = topicCategory
                 ? `카테고리: ${topicCategory}`
                 : "카테고리 정보 없음";
 
+            // ✅ 시민/라이어 모두 제시어를 항상 부여받고, infoEl에 고정 표시
             if (isLiar) {
                 qEl.textContent = "당신은 라이어입니다!";
-                infoEl.textContent =
-                    "제시어를 모릅니다. 다른 사람의 설명을 듣고 제시어를 추리하세요.";
+                myWordText = myWord
+                    ? `당신의 (가짜) 제시어: ${myWord}`
+                    : "가짜 제시어를 불러오지 못했습니다.";
             } else {
                 qEl.textContent = "당신은 시민입니다.";
-                infoEl.textContent = myWord
+                myWordText = myWord
                     ? `당신의 제시어: ${myWord}`
                     : "제시어를 불러오지 못했습니다.";
             }
+            infoEl.textContent = myWordText;  // 🔥 이 줄 이후로는 infoEl을 건드리지 않음!
+
         } catch (err) {
             console.error("제시어 불러오기 오류:", err);
         }
@@ -353,12 +361,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearExplainSummary();
                 voteAreaEl.innerHTML = "";
 
-                addLog(`게임 시작! ${info.round || 1}라운드가 곧 시작됩니다. (5초 후 설명)`);
+                currentRound = info.round || currentRound || 1;
+                qEl.textContent = `라운드 ${currentRound}가 곧 시작됩니다. (5초 후 설명 단계)`;
+                addLog(`게임 시작! ${currentRound}라운드가 곧 시작됩니다. (5초 후 설명)`);
 
-                // 제시어/역할 불러오기
+                // 새 라운드 제시어/역할 로딩
                 loadRoundInfo();
 
-                // 5초 카운트 후 호스트가 설명 순서 셔플 + 첫 설명자 호출
+                // 5초 후 설명 순서 시작 (호스트만)
                 startTimer(5, () => {
                     if (isHost) {
                         prepareSpeakingOrder();
@@ -377,8 +387,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 const speaker = getPlayerByID(currentSpeakerID);
                 const name = speaker ? speaker.username : `플레이어 ${currentSpeakerID}`;
 
-                infoEl.textContent = `${name}님의 설명 차례입니다. (10초)`;
-                addLog(`[설명] ${name}님의 차례입니다.`);
+                qEl.textContent = `${name}님의 설명 차례입니다. (10초)`;
+                addLog(`📝 [설명] ${name}님의 차례입니다.`);
 
                 startTimer(10, () => {
                     if (isHost) {
@@ -394,7 +404,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentSpeakerID = null;
                 updateRoundAndPhaseUI();
 
-                infoEl.textContent = "토론 단계입니다. 모두 자유롭게 채팅으로 의견을 나누세요! (60초)";
+                qEl.textContent = "토론 단계입니다. 모두 자유롭게 채팅으로 의견을 나누세요! (60초)";
                 addLog("💬 토론 단계 시작 (60초)");
 
                 voteAreaEl.innerHTML = "";
@@ -416,7 +426,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentSpeakerID = null;
                 updateRoundAndPhaseUI();
 
-                infoEl.textContent = "1차 투표 단계입니다. 라이어라고 생각하는 사람에게 투표하세요! (10초)";
+                qEl.textContent = "1차 투표 단계입니다. 라이어라고 생각하는 사람에게 투표하세요! (10초)";
                 addLog("🗳 1차 투표 단계 시작 (10초)");
 
                 myVoteTargetId = null;
@@ -438,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentSuspectID = info.suspectID ? Number(info.suspectID) : null;
                 currentSuspectName = info.suspectName || "용의자";
 
-                infoEl.textContent = `${currentSuspectName}님에 대해 '라이어다 / 아니다'를 선택하세요! (10초)`;
+                qEl.textContent = `${currentSuspectName}님이 라이어인지 최종 판단하세요! (10초)`;
                 addLog(`⚖ 최종 판단: ${currentSuspectName}님이 라이어 후보입니다.`);
 
                 myFinalChoice = null;
@@ -446,21 +456,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 startTimer(10, () => {
                     if (isHost) {
-                        // 소켓에 최종 결과 요청 → 서버가 집계해서 finalChoiceResult 브로드캐스트
                         socket.emit("finalChoiceResult", { roomID: Number(roomID) });
                     }
                 });
                 break;
             }
 
-            // 최종 결과(점수 계산까지 끝난 후, 호스트가 phaseUpdate로 뿌림)
+            // 라운드 결과(게임 계속 진행)
+            case "roundResult": {
+                gameState = PHASE.ROUND_RESULT;
+                updateRoundAndPhaseUI();
+                clearTimer();
+                voteAreaEl.innerHTML = "";
+
+                const liarPlayer = getPlayerByID(info.liarID);
+                const liarName = liarPlayer ? liarPlayer.username : (info.liarID || "라이어");
+
+                let roundMsg = "";
+                if (info.outcome === "liarCaught") {
+                    roundMsg = `🎉 이번 라운드에서 라이어(${liarName})를 잡았습니다!`;
+                } else if (info.outcome === "liarWronglyAccused") {
+                    roundMsg = `💀 시민들이 오판했습니다. ${info.suspectName}님은 라이어가 아니었습니다.`;
+                } else if (info.outcome === "liarEscaped") {
+                    roundMsg = `😈 라이어(${liarName})가 정체를 숨기고 도망쳤습니다.`;
+                } else {
+                    roundMsg = "이번 라운드 결과가 처리되었습니다.";
+                }
+
+                qEl.textContent = roundMsg;
+                addLog(roundMsg);
+
+                // ✅ 5초 후 다음 라운드 자동 시작 (호스트만)
+                if (isHost && currentRound < maxRounds) {
+                    setTimeout(() => {
+                        startNextRound();
+                    }, 5000);
+                }
+                break;
+            }
+
+            // 최종 결과(마지막 라운드 종료, 우승자 팝업)
             case "finalResult": {
                 gameState = PHASE.RESULT;
                 updateRoundAndPhaseUI();
                 clearTimer();
                 voteAreaEl.innerHTML = "";
 
-                showResultCard(info);
+                showResultCard(info);  // info.winnerInfo 포함
                 break;
             }
 
@@ -470,14 +512,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ------------------------------
-    // 설명 순서 준비 (호스트만)
+    // 설명 순서 준비/진행 (호스트)
     // ------------------------------
     function prepareSpeakingOrder() {
         const ids = players.map(p => Number(p.userID));
         speakingOrder = shuffleArray(ids);
         currentSpeakerIndex = -1;
 
-        // 서버에 설명 순서 저장
         socket.emit("setSpeakingOrder", {
             roomID: Number(roomID),
             order: speakingOrder,
@@ -587,7 +628,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             addLog(`📌 1차 투표 결과: ${suspectName}님이 ${votes}표로 용의자로 지목되었습니다.`);
 
-            // 서버에도 용의자 저장 (socket.js state용)
+            // 서버에도 용의자 저장
             socket.emit("setSuspect", {
                 roomID: Number(roomID),
                 suspectID,
@@ -649,20 +690,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         myFinalChoice = choice;
 
-        // 버튼 UI 갱신
         document.querySelectorAll(".final-choice-btn").forEach((b) => {
             b.classList.remove("selected");
         });
         clickedBtn.classList.add("selected");
 
-        // 소켓에 최종 투표 기록 (실시간 집계용)
+        // 실시간 집계용
         socket.emit("finalChoiceVote", {
             roomID: Number(roomID),
             userID,
-            choice, // "guilty" or "innocent"
+            choice,
         });
 
-        // 백엔드 DB에도 기록 (점수/랭킹용)
+        // DB 저장용 (0/1)
         const numericChoice = choice === "guilty" ? 1 : 0;
         try {
             const res = await fetch(`${API_BASE_URL}/api/game/final-vote`, {
@@ -687,12 +727,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // 최종 2지선다 집계 결과 (소켓)
     // ------------------------------
     socket.on("finalChoiceResult", async (data) => {
-        const { guiltyCount, innocentCount, suspectID } = data;
+        const { guiltyCount, innocentCount } = data;
         console.log("🟥 finalChoiceResult:", data);
 
         if (guiltyCount > innocentCount) {
-            // 다수 의견: "라이어다" → 이제 진짜 최종 결과(점수 계산 포함)를 백엔드에서 받아온 뒤 전체에 브로드캐스트
-            addLog("다수 의견: 라이어다 → 최종 결과를 계산합니다.");
+            // "라이어다" 다수 → 백엔드에서 최종 결과(점수 계산 + 우승자 여부) 받아오기
+            addLog("다수 의견: '라이어다' → 최종 결과를 계산합니다.");
 
             if (isHost) {
                 try {
@@ -712,10 +752,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         return;
                     }
 
-                    // 모든 플레이어에게 최종 결과 브로드캐스트
+                    const isGameOver = !!resultData.winnerInfo;
+                    // 라운드 결과 or 최종 결과를 방 전체에 브로드캐스트
                     socket.emit("phaseUpdate", {
                         roomID: Number(roomID),
-                        phase: "finalResult",
+                        phase: isGameOver ? "finalResult" : "roundResult",
                         info: resultData,
                     });
                 } catch (err) {
@@ -727,9 +768,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } else {
-            // 다수 의견: "라이어가 아니다" (또는 동점) → 재토론 단계로 되돌리기
-            addLog("다수 의견: 라이어가 아니다 → 다시 토론 단계로 돌아갑니다.");
-
+            // "라이어가 아니다" 다수 → 다시 토론 단계로
+            addLog("다수 의견: '라이어가 아니다' → 다시 토론 단계로 돌아갑니다.");
             if (isHost) {
                 socket.emit("phaseUpdate", {
                     roomID: Number(roomID),
@@ -741,7 +781,50 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ------------------------------
-    // 결과 카드 표시
+    // 다음 라운드 시작 (호스트용)
+    // ------------------------------
+    async function startNextRound() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/game/start`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    roomID: Number(roomID),
+                    userID,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                showPopup(data.message || "다음 라운드를 시작할 수 없습니다.", {
+                    title: "오류",
+                    type: "error",
+                });
+                return;
+            }
+
+            currentRound = data.currentRound || currentRound + 1;
+            maxRounds = data.maxRounds || maxRounds;
+            updateRoundAndPhaseUI();
+
+            addLog(`${currentRound}라운드가 곧 시작됩니다.`);
+
+            socket.emit("phaseUpdate", {
+                roomID: Number(roomID),
+                phase: "roundStart",
+                info: { round: currentRound },
+            });
+        } catch (err) {
+            console.error("다음 라운드 시작 오류:", err);
+            showPopup("다음 라운드를 시작하는 중 오류가 발생했습니다.", {
+                title: "오류",
+                type: "error",
+            });
+        }
+    }
+
+    // ------------------------------
+    // 결과 카드 표시 (마지막 라운드에서만 호출)
     // ------------------------------
     function showResultCard(info) {
         /*
@@ -755,55 +838,64 @@ document.addEventListener("DOMContentLoaded", () => {
                 liarVoteCount,
                 notLiarVoteCount,
                 majorityChoice,
-                outcome,        // "liarCaught" | "liarWronglyAccused" | "liarEscaped" ...
-                winnerInfo      // 마지막 라운드에서 최종 우승자 정보 등 (있을 수도 있고 없음)
+                outcome,
+                winnerInfo: {
+                    winnerID,
+                    winnerName,
+                    totalScore
+                } | null
             }
         */
 
         const liarID = info.liarID;
-        const suspectID = info.suspectID;
         const suspectName = info.suspectName;
         const liarVoteCount = info.liarVoteCount;
         const notLiarVoteCount = info.notLiarVoteCount;
         const outcome = info.outcome;
+        const winnerInfo = info.winnerInfo;
 
         const liarPlayer = getPlayerByID(liarID);
         const liarName = liarPlayer ? liarPlayer.username : (liarID ? `ID ${liarID}` : "알 수 없음");
 
-        // 승패 텍스트
+        // 기본 메시지
         let outcomeText = "";
         let detailText = "";
 
-        if (outcome === "liarCaught") {
-            outcomeText = "시민 승리!";
-            detailText = `시민들이 라이어(${liarName})를 정확히 찾아냈습니다.`;
-        } else if (outcome === "liarWronglyAccused") {
-            outcomeText = "라이어 승리!";
-            detailText = `${suspectName}님은 라이어가 아니었습니다. 시민들이 잘못된 사람을 지목했습니다.`;
-        } else if (outcome === "liarEscaped") {
-            outcomeText = "라이어 승리!";
-            detailText = `시민들이 라이어를 잡지 못해, 라이어(${liarName})가 정체를 숨기고 도망쳤습니다.`;
+        if (winnerInfo && winnerInfo.winnerName) {
+            // ✅ 마지막 라운드 → 최종 우승자 정보 표시
+            outcomeText = "최종 우승자";
+            detailText = `${winnerInfo.winnerName}님이 총 ${winnerInfo.totalScore}점을 기록하며 우승했습니다!`;
+            resultLiarNameEl.textContent = `우승자: ${winnerInfo.winnerName}`;
+            resultWordEl.textContent = `최종 점수: ${winnerInfo.totalScore}점`;
         } else {
+            // 혹시나 winnerInfo가 없는데 finalResult가 온 경우(예외 상황)
             outcomeText = "게임 결과";
-            detailText = "최종 결과가 처리되었습니다.";
+            detailText = "게임이 종료되었습니다.";
+            resultLiarNameEl.textContent = `라이어: ${liarName}`;
+            resultWordEl.textContent = topicCategory
+                ? `제시어 카테고리: ${topicCategory}`
+                : "제시어 정보: -";
+        }
+
+        // 라이어 잡힘/도망 등의 부가 정보
+        let outcomeSub = "";
+        if (outcome === "liarCaught") {
+            outcomeSub = `시민들이 라이어(${liarName})를 잡았습니다!`;
+        } else if (outcome === "liarWronglyAccused") {
+            outcomeSub = `${suspectName}님은 라이어가 아니었습니다. 시민들이 오판했습니다.`;
+        } else if (outcome === "liarEscaped") {
+            outcomeSub = `시민들이 라이어(${liarName})를 잡지 못했습니다.`;
         }
 
         resultOutcomeEl.textContent = outcomeText;
-        resultLiarNameEl.textContent = `라이어: ${liarName}`;
-        // 완벽한 제시어 정보가 없으므로 우선 카테고리만 표시
-        resultWordEl.textContent = topicCategory
-            ? `제시어 카테고리: ${topicCategory}`
-            : "제시어 정보: -";
-
         resultDetailEl.textContent =
-            `${detailText}\n(라이어다: ${liarVoteCount}표 / 아니다: ${notLiarVoteCount}표)`;
+            `${detailText}\n${outcomeSub}\n(라이어다: ${liarVoteCount}표 / 아니다: ${notLiarVoteCount}표)`;
 
         resultOverlayEl.classList.add("show");
     }
 
     if (resultCloseBtn) {
         resultCloseBtn.addEventListener("click", () => {
-            // 일단은 로비로 이동 (추후 다시 한 판 하기 등으로 확장 가능)
             location.href = "game_lobby.html";
         });
     }
@@ -856,7 +948,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (gameState === PHASE.EXPLAIN && currentSpeakerID && Number(data.userID) === Number(currentSpeakerID)) {
             addExplainSummaryLine(data.userID, data.message);
 
-            // 호스트는 설명이 나오면 다음 사람으로 넘기기
+            // 호스트는 설명이 나오면 바로 다음 사람으로
             if (isHost) {
                 clearTimer();
                 setTimeout(() => {
@@ -874,7 +966,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 수신: 플레이어 목록 업데이트
     socket.on("playerUpdate", (playerRows) => {
-        // playerRows = [{ userID, username }, ...]
         players = playerRows.map(p => ({
             userID: Number(p.userID),
             username: p.username,
@@ -891,7 +982,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ------------------------------
     // 버튼 이벤트
     // ------------------------------
-    // 게임 시작 (호스트 전용)
+    // 게임 시작 (호스트 전용, 1라운드 시작)
     startBtn.addEventListener("click", async () => {
         if (!isHost) {
             showPopup("게임 시작은 호스트만 할 수 있습니다.", {
@@ -948,9 +1039,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // (선택) 라이어 공개 버튼 – 지금은 안내만
+    // (선택) 라이어 공개 버튼 – 현재는 안내만
     revealBtn.addEventListener("click", () => {
-        showPopup("현재는 라이어를 시스템이 강제로 공개하지 않습니다.\n토론과 추리로 라이어를 찾아보세요!", {
+        showPopup("현재는 라이어를 시스템이 강제 공개하지 않습니다.\n토론과 추리로 라이어를 찾아보세요!", {
             title: "알림",
             type: "info",
         });
@@ -980,7 +1071,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // 소켓에서도 방 나가기 알림
             socket.emit("leaveRoom", {
                 roomID: Number(roomID),
                 userID,

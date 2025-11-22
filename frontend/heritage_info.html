@@ -96,7 +96,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // 🔄 Render 백엔드 주소로 변경
+    // 🔄 Render 백엔드 주소
     const API_BASE_URL = "https://databaseproject-r39m.onrender.com";
     const container = document.getElementById('detail-content');
 
@@ -125,7 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const name = item.heritageName || "이름 없음";
             const imageUrl = item.heritageImagelink || "";
-            const desc = item.heritageDesc || "설명 없음";
+            // 🔥 여기서 heritageDesc / heritageContent 둘 다 대응
+            const desc = item.heritageDesc || item.heritageContent || "설명 없음";
             const category = item.heritageCategory || "";
 
             container.innerHTML = `

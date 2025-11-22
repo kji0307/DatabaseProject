@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:3000"; // 백엔드 서버 주소
+const BASE_URL = "https://databaseproject-r39m.onrender.com"; // Render 백엔드 주소
 
 async function loadHeritageList() {
   try {
@@ -9,17 +9,22 @@ async function loadHeritageList() {
     listContainer.innerHTML = "";
 
     data.forEach(item => {
+      const desc =
+        item.heritageDesc ||    // 예전 필드명
+        item.heritageContent || // 지금 DB 필드명
+        "설명 없음";            // 둘 다 없을 때
+
       const card = document.createElement("div");
       card.classList.add("heritage-item");
 
       card.innerHTML = `
         <h3>${item.heritageName}</h3>
         <p>유형: ${item.heritageCategory}</p>
-        <p>${item.heritageDesc}</p>
+        <p>${desc}</p>
       `;
 
       card.addEventListener("click", () => {
-        window.location.href = `heritage_detail.html?id=${item.heritageID}`;
+        window.location.href = `heritage_info.html?id=${item.heritageID}`;
       });
 
       listContainer.appendChild(card);

@@ -51,23 +51,25 @@
 <main>
     <section class="hero">
         <h2>경주의 숨은 문화재를 라이어게임으로 즐기세요!</h2>
-        <p>역사와 재미가 함께하는 문화재 탐험, 지금 시작해보세요.</p>
+        <p>역사와 재미가 함께하는 문화재 게임, 지금 시작해보세요.</p>
         <button onclick="location.href='game_lobby.html'">게임 시작</button>
     </section>
 
     <section class="features">
-        <div class="feature-card">
-            <img src="quiz_icon.png" alt="퀴즈 아이콘">
-            <h3>퀴즈 도전</h3>
+        <!-- 🔥 랭킹 카드 클릭 시 ranking.html 이동 -->
+        <div class="feature-card" onclick="location.href='ranking.html'" style="cursor: pointer;">
+            <h3>랭킹 확인</h3>
             <p>문화재 지식을 테스트하고 점수를 확인하세요.</p>
         </div>
-        <div class="feature-card">
-            <img src="info_icon.png" alt="정보 아이콘">
+
+        <!-- 🔥 문화재 카드 클릭 시 heritage_cate.html 이동 -->
+        <div class="feature-card" onclick="location.href='heritage_cate.html'" style="cursor: pointer;">
             <h3>문화재 정보</h3>
             <p>경주 문화재에 대한 상세 정보를 확인하세요.</p>
         </div>
     </section>
 </main>
+
 
 <footer>
     <p>© 2025 경주 문화재 게임 | 제작: 지혁,창민,성민</p>

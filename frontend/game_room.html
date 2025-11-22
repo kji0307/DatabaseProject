@@ -5,14 +5,61 @@
     <title>게임 대기방 / 라이어 게임</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        body { margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        main { flex: 1; display: flex; justify-content: center; align-items: stretch; padding: 20px 0; }
-        .room-wrapper { width: 90%; max-width: 1100px; display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 16px; }
-        .panel { background: rgba(15, 25, 50, 0.95); border-radius: 10px; padding: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); color: #fff; }
-        .panel-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; }
-        .player-list { list-style: none; padding: 0; margin: 0; max-height: 260px; overflow-y: auto; }
-        .player-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; margin-bottom: 4px; background: rgba(30,45,80,0.9); border-radius: 4px; font-size: 0.9rem; }
-        .player-item.host span { color: #f1c40f; }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            padding: 20px 0;
+        }
+        .room-wrapper {
+            width: 90%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1.2fr 1.8fr;
+            gap: 16px;
+        }
+        .panel {
+            background: rgba(15, 25, 50, 0.95);
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            color: #fff;
+        }
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 6px;
+        }
+        .player-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            background: rgba(30,45,80,0.9);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .player-item.host span {
+            color: #f1c40f;
+        }
 
         .game-header {
             display: flex;
@@ -43,11 +90,31 @@
             min-height: 20px;
         }
 
-        .game-buttons { margin-top: 12px; display: flex; gap: 8px; }
-        .game-btn { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.9rem; }
-        .start-btn { background: #2ecc71; color: #fff; }
-        .reveal-btn { background: #e67e22; color: #fff; display:none; }
-        .exit-btn { background: #c0392b; color: #fff; }
+        .game-buttons {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+        .game-btn {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .start-btn {
+            background: #2ecc71;
+            color: #fff;
+        }
+        .reveal-btn {
+            background: #e67e22;
+            color: #fff;
+            display: none;
+        }
+        .exit-btn {
+            background: #c0392b;
+            color: #fff;
+        }
 
         .timer-display {
             font-size: 0.9rem;
@@ -90,6 +157,67 @@
         }
         .log-entry span.text {
             color: #ecf0f1;
+        }
+
+        /* 🔥 채팅 영역 스타일 */
+        .chat-area {
+            margin-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .chat-messages {
+            max-height: 120px;
+            overflow-y: auto;
+            background: rgba(5, 15, 35, 0.9);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 0.85rem;
+        }
+
+        .chat-message-row {
+            margin-bottom: 4px;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            margin-right: 4px;
+            color: #f1c40f;
+        }
+
+        .chat-text {
+            color: #ecf0f1;
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            background: rgba(10,20,40,0.9);
+            color: #ecf0f1;
+        }
+
+        #chat-send-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            background: #3498db;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        #chat-send-btn:hover {
+            background: #2980b9;
         }
     </style>
 </head>
@@ -154,6 +282,15 @@
 
             <div class="vote-area" id="vote-area"></div>
             <div class="log-area" id="log-area"></div>
+
+            <!-- 🔥 채팅 영역 -->
+            <div class="chat-area">
+                <div class="chat-messages" id="chat-messages"></div>
+                <div class="chat-input-row">
+                    <input type="text" id="chat-input" placeholder="메시지를 입력하세요 (Enter)" />
+                    <button id="chat-send-btn">전송</button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -165,7 +302,10 @@
     </p>
 </footer>
 
+<!-- 🔌 socket.io 클라이언트 + 기존 스크립트 -->
+<script src="/socket.io/socket.io.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/game.js"></script>
+<script src="js/chat.js"></script>
 </body>
 </html>

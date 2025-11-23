@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const tags = [];
             if (Number(p.userID) === Number(userID)) tags.push("(나)");
-            tags.push(`${p.score ?? 0}점`);
+
 
             li.innerHTML = `
             <span>${p.isHost ? "👑 " : ""}${p.username}</span>

@@ -751,7 +751,12 @@ exports.getFinalVoteResult = async (req, res) => {
             await pool.query(
                 `UPDATE liar_game_room_tbl
                  SET gameState = 'finished'
+                     isActive = 0
                  WHERE roomID = ?`,
+                [roomID]
+            );
+            await pool.query(
+                `DELETE FROM liar_game_room_tbl WHERE roomID = ?`,
                 [roomID]
             );
         }

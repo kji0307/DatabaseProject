@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const hostEl = document.getElementById("room-host");
     const countEl = document.getElementById("room-count");
     const playerListEl = document.getElementById("player-list");
+    const scoreBoardEl = document.getElementById("score-board");
 
     const roundInfoEl = document.getElementById("round-info");
     const phaseInfoEl = document.getElementById("phase-info");
@@ -201,6 +202,57 @@ document.addEventListener("DOMContentLoaded", () => {
         countEl.textContent = `${players.length}명`;
     }
 
+    // ------------------------------
+    // 라운드별 점수판 로딩
+    // ------------------------------
+    async function loadScores() {
+        if (!scoreBoardEl) return;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/game/rooms/${roomID}/scores`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.error("점수 조회 실패:", data.message || res.statusText);
+                scoreBoardEl.innerHTML = `<div class="score-empty">점수를 불러오지 못했습니다.</div>`;
+                return;
+            }
+
+            const maxRound = data.maxRound || 0;
+            const players = data.players || [];
+
+            if (players.length === 0 || maxRound === 0) {
+                scoreBoardEl.innerHTML = `<div class="score-empty">아직 점수 기록이 없습니다.</div>`;
+                return;
+            }
+
+            let html = `<table class="score-table"><thead><tr><th>플레이어</th>`;
+
+            for (let r = 1; r <= maxRound; r++) {
+                html += `<th>R${r}</th>`;
+            }
+            html += `<th>합계</th></tr></thead><tbody>`;
+
+            players.forEach((p) => {
+                html += `<tr><td>${p.username}</td>`;
+                for (let r = 1; r <= maxRound; r++) {
+                    const key = String(r);
+                    const s = p.perRound && p.perRound[key] != null ? p.perRound[key] : 0;
+                    html += `<td>${s}</td>`;
+                }
+                html += `<td>${p.total}</td></tr>`;
+            });
+
+            html += `</tbody></table>`;
+
+            scoreBoardEl.innerHTML = html;
+        } catch (err) {
+            console.error("점수 불러오기 오류:", err);
+            scoreBoardEl.innerHTML = `<div class="score-empty">점수를 불러오지 못했습니다.</div>`;
+        }
+    }
+
+
     function appendChatMessage(name, message, options = {}) {
         if (!chatMessagesEl) return;
         const { isSystem = false, isMine = false } = options;
@@ -280,6 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
             gameState = PHASE.WAIT;
             updateRoundAndPhaseUI();
             renderPlayers();
+            loadScores();
 
             // 버튼 상태
             if (isHost) {
@@ -485,6 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 qEl.textContent = roundMsg;
                 addLog(roundMsg);
+                loadScores();
 
                 // ✅ 5초 후 다음 라운드 자동 시작 (호스트만)
                 if (isHost && currentRound < maxRounds) {
@@ -502,6 +556,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearTimer();
                 voteAreaEl.innerHTML = "";
 
+                loadScores();
                 showResultCard(info);  // info.winnerInfo 포함
                 break;
             }

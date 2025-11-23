@@ -752,7 +752,23 @@ document.addEventListener("DOMContentLoaded", () => {
                         return;
                     }
 
-                    const isGameOver = !!resultData.winnerInfo;
+                    let isGameOver = false;
+
+                    // winnerInfo가 배열인 경우(여러 명 우승 방식)
+                    if (Array.isArray(resultData.winnerInfo)) {
+                        isGameOver = resultData.winnerInfo.length > 0;
+                    }
+                    // 예전 구조(객체 한 명만 오는 방식)도 혹시 몰라서 같이 지원
+                    else if (resultData.winnerInfo && typeof resultData.winnerInfo === "object") {
+                        isGameOver = true;
+                    }
+
+
+
+
+
+
+
                     // 라운드 결과 or 최종 결과를 방 전체에 브로드캐스트
                     socket.emit("phaseUpdate", {
                         roomID: Number(roomID),
@@ -827,65 +843,65 @@ document.addEventListener("DOMContentLoaded", () => {
     // 결과 카드 표시 (마지막 라운드에서만 호출)
     // ------------------------------
     function showResultCard(info) {
-    const liarID = info.liarID;
-    const suspectName = info.suspectName;
-    const liarVoteCount = info.liarVoteCount;
-    const notLiarVoteCount = info.notLiarVoteCount;
-    const outcome = info.outcome;
-    const winners = info.winnerInfo || [];
+        const liarID = info.liarID;
+        const suspectName = info.suspectName;
+        const liarVoteCount = info.liarVoteCount;
+        const notLiarVoteCount = info.notLiarVoteCount;
+        const outcome = info.outcome;
+        const winners = info.winnerInfo || [];
 
-    const liarPlayer = getPlayerByID(liarID);
-    const liarName = liarPlayer ? liarPlayer.username : (liarID ? `ID ${liarID}` : "알 수 없음");
+        const liarPlayer = getPlayerByID(liarID);
+        const liarName = liarPlayer ? liarPlayer.username : (liarID ? `ID ${liarID}` : "알 수 없음");
 
-    let outcomeText = "게임 결과";
-    let detailText = "";
-    let isFinal = false;
+        let outcomeText = "게임 결과";
+        let detailText = "";
+        let isFinal = false;
 
-    if (Array.isArray(winners) && winners.length > 0) {
-        isFinal = true;
+        if (Array.isArray(winners) && winners.length > 0) {
+            isFinal = true;
 
-        if (winners.length === 1) {
-            const w = winners[0];
-            const user = getPlayerByID(w.winnerID);
-            const name = user ? user.username : `유저${w.winnerID}`;
-            outcomeText = "최종 우승자";
-            detailText = `${name}님이 총 ${w.totalScore}점을 기록하며 우승했습니다!`;
+            if (winners.length === 1) {
+                const w = winners[0];
+                const user = getPlayerByID(w.winnerID);
+                const name = user ? user.username : `유저${w.winnerID}`;
+                outcomeText = "최종 우승자";
+                detailText = `${name}님이 총 ${w.totalScore}점을 기록하며 우승했습니다!`;
+            } else {
+                outcomeText = `최종 우승자(${winners.length}명)`;
+                detailText =
+                    winners
+                        .map((w) => {
+                            const user = getPlayerByID(w.winnerID);
+                            const name = user ? user.username : `유저${w.winnerID}`;
+                            return `${name}: ${w.totalScore}점`;
+                        })
+                        .join("\n");
+            }
         } else {
-            outcomeText = `최종 우승자(${winners.length}명)`;
-            detailText =
-                winners
-                    .map((w) => {
-                        const user = getPlayerByID(w.winnerID);
-                        const name = user ? user.username : `유저${w.winnerID}`;
-                        return `${name}: ${w.totalScore}점`;
-                    })
-                    .join("\n");
+            detailText = "게임이 종료되었습니다.";
         }
-    } else {
-        detailText = "게임이 종료되었습니다.";
+
+        let outcomeSub = "";
+        if (outcome === "liarCaught") {
+            outcomeSub = `시민들이 라이어(${liarName})를 잡았습니다!`;
+        } else if (outcome === "liarWronglyAccused") {
+            outcomeSub = `${suspectName}님은 라이어가 아니었습니다. 시민들이 오판했습니다.`;
+        } else if (outcome === "liarEscaped") {
+            outcomeSub = `시민들이 라이어(${liarName})를 잡지 못했습니다.`;
+        }
+
+        resultOutcomeEl.textContent = outcomeText;
+        resultDetailEl.textContent =
+            `${detailText}\n${outcomeSub}\n(라이어다: ${liarVoteCount}표 / 아니다: ${notLiarVoteCount}표)`;
+
+        resultLiarNameEl.textContent = `라이어: ${liarName}`;
+
+        resultWordEl.textContent = topicCategory
+            ? `제시어 카테고리: ${topicCategory}`
+            : "";
+
+        resultOverlayEl.classList.add("show");
     }
-
-    let outcomeSub = "";
-    if (outcome === "liarCaught") {
-        outcomeSub = `시민들이 라이어(${liarName})를 잡았습니다!`;
-    } else if (outcome === "liarWronglyAccused") {
-        outcomeSub = `${suspectName}님은 라이어가 아니었습니다. 시민들이 오판했습니다.`;
-    } else if (outcome === "liarEscaped") {
-        outcomeSub = `시민들이 라이어(${liarName})를 잡지 못했습니다.`;
-    }
-
-    resultOutcomeEl.textContent = outcomeText;
-    resultDetailEl.textContent =
-        `${detailText}\n${outcomeSub}\n(라이어다: ${liarVoteCount}표 / 아니다: ${notLiarVoteCount}표)`;
-
-    resultLiarNameEl.textContent = `라이어: ${liarName}`;
-
-    resultWordEl.textContent = topicCategory
-        ? `제시어 카테고리: ${topicCategory}`
-        : "";
-
-    resultOverlayEl.classList.add("show");
-}
 
     if (resultCloseBtn) {
         resultCloseBtn.addEventListener("click", () => {

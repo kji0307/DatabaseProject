@@ -30,4 +30,6 @@ router.post("/final-vote/result", gameController.getFinalVoteResult);
 // 누적 점수 기반 랭킹 조회
 router.get("/ranking", gameController.getRanking);
 
+router.get("/rooms/:roomID/scores", gameController.getRoomScores);
+
 module.exports = router;

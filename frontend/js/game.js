@@ -70,6 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const voteAreaEl = document.getElementById("vote-area");
     const logAreaEl = document.getElementById("log-area");
 
+    const scoreBoardEl = document.getElementById("score-board");
+
     const chatMessagesEl = document.getElementById("chat-messages");
     const chatInputEl = document.getElementById("chat-input");
     const chatSendBtn = document.getElementById("chat-send-btn");
@@ -192,14 +194,20 @@ document.addEventListener("DOMContentLoaded", () => {
         players.forEach(p => {
             const li = document.createElement("li");
             li.className = "player-item" + (p.isHost ? " host" : "");
+
+            const tags = [];
+            if (Number(p.userID) === Number(userID)) tags.push("(나)");
+            tags.push(`${p.score ?? 0}점`);
+
             li.innerHTML = `
-                <span>${p.isHost ? "👑 " : ""}${p.username}</span>
-                <span class="player-tag">${Number(p.userID) === Number(userID) ? "(나)" : ""}</span>
-            `;
+            <span>${p.isHost ? "👑 " : ""}${p.username}</span>
+            <span class="player-tag">${tags.join(" · ")}</span>
+        `;
             playerListEl.appendChild(li);
         });
         countEl.textContent = `${players.length}명`;
     }
+
 
     function appendChatMessage(name, message, options = {}) {
         if (!chatMessagesEl) return;
@@ -224,6 +232,57 @@ document.addEventListener("DOMContentLoaded", () => {
     function getPlayerByID(id) {
         return players.find(p => Number(p.userID) === Number(id)) || null;
     }
+
+    // ------------------------------
+    // 라운드별 점수판 로딩
+    // ------------------------------
+    async function loadScores() {
+        if (!scoreBoardEl) return;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/game/rooms/${roomID}/scores`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.error("점수 조회 실패:", data.message || res.statusText);
+                scoreBoardEl.innerHTML = `<div class="score-empty">점수를 불러오지 못했습니다.</div>`;
+                return;
+            }
+
+            const maxRound = data.maxRound || 0;
+            const players = data.players || [];
+
+            if (players.length === 0 || maxRound === 0) {
+                scoreBoardEl.innerHTML = `<div class="score-empty">아직 점수 기록이 없습니다.</div>`;
+                return;
+            }
+
+            let html = `<table class="score-table"><thead><tr><th>플레이어</th>`;
+
+            for (let r = 1; r <= maxRound; r++) {
+                html += `<th>R${r}</th>`;
+            }
+            html += `<th>합계</th></tr></thead><tbody>`;
+
+            players.forEach((p) => {
+                html += `<tr><td>${p.username}</td>`;
+                for (let r = 1; r <= maxRound; r++) {
+                    const key = String(r);
+                    const s = p.perRound && p.perRound[key] != null ? p.perRound[key] : 0;
+                    html += `<td>${s}</td>`;
+                }
+                html += `<td>${p.total}</td></tr>`;
+            });
+
+            html += `</tbody></table>`;
+
+            scoreBoardEl.innerHTML = html;
+        } catch (err) {
+            console.error("점수 불러오기 오류:", err);
+            scoreBoardEl.innerHTML = `<div class="score-empty">점수를 불러오지 못했습니다.</div>`;
+        }
+    }
+
 
     function shuffleArray(arr) {
         const a = [...arr];
@@ -273,6 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 userID: Number(p.userID),
                 username: p.username,
                 isHost: Number(p.userID) === Number(roomHostID),
+                score: Number(p.score || 0)
             }));
 
             currentRound = room.currentRound || 0;
@@ -280,6 +340,8 @@ document.addEventListener("DOMContentLoaded", () => {
             gameState = PHASE.WAIT;
             updateRoundAndPhaseUI();
             renderPlayers();
+
+            loadScores();
 
             // 버튼 상태
             if (isHost) {
@@ -469,16 +531,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearTimer();
                 voteAreaEl.innerHTML = "";
 
-                const liarPlayer = getPlayerByID(info.liarID);
-                const liarName = liarPlayer ? liarPlayer.username : (info.liarID || "라이어");
+                const liarPlayer = info.liarID ? getPlayerByID(info.liarID) : null;
+                const liarName = liarPlayer ? liarPlayer.username : (info.liarName || "라이어");
 
                 let roundMsg = "";
                 if (info.outcome === "liarCaught") {
                     roundMsg = `🎉 이번 라운드에서 라이어(${liarName})를 잡았습니다!`;
                 } else if (info.outcome === "liarWronglyAccused") {
-                    roundMsg = `💀 시민들이 오판했습니다. ${info.suspectName}님은 라이어가 아니었습니다.`;
+                    roundMsg = `${info.suspectName}님은 라이어가 아니었습니다. 시민들이 오판했습니다.`;
                 } else if (info.outcome === "liarEscaped") {
                     roundMsg = `😈 라이어(${liarName})가 정체를 숨기고 도망쳤습니다.`;
+                } else if (info.outcome === "noFirstVoteLiarWin") {
+                    // ✅ 새로 추가
+                    roundMsg = `😈 아무도 투표하지 않아 라이어(${liarName})가 이번 라운드를 승리했습니다.`;
                 } else {
                     roundMsg = "이번 라운드 결과가 처리되었습니다.";
                 }
@@ -486,7 +551,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 qEl.textContent = roundMsg;
                 addLog(roundMsg);
 
-                // ✅ 5초 후 다음 라운드 자동 시작 (호스트만)
+                loadScores();
+
                 if (isHost && currentRound < maxRounds) {
                     setTimeout(() => {
                         startNextRound();
@@ -495,12 +561,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 break;
             }
 
+
             // 최종 결과(마지막 라운드 종료, 우승자 팝업)
             case "finalResult": {
                 gameState = PHASE.RESULT;
                 updateRoundAndPhaseUI();
                 clearTimer();
                 voteAreaEl.innerHTML = "";
+
+                loadScores();
 
                 showResultCard(info);  // info.winnerInfo 포함
                 break;
@@ -621,6 +690,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            // ✅ 1) 아무도 투표 안 해서 라이어 자동 승리인 케이스
+            if (data.outcome === "noFirstVoteLiarWin") {
+                const liarPlayer = data.liarID ? getPlayerByID(data.liarID) : null;
+                const liarName = liarPlayer ? liarPlayer.username : (data.liarName || "라이어");
+
+                addLog(`아무도 투표하지 않아 라이어(${liarName})가 이 라운드를 승리했습니다.`);
+
+                // 이 라운드 결과 표시 단계로 바로 전환
+                socket.emit("phaseUpdate", {
+                    roomID: Number(roomID),
+                    phase: "roundResult",
+                    info: data,   // outcome, liarID, liarName, roundNum 포함
+                });
+                return;
+            }
+
+            // ✅ 2) 기존 정상 케이스 (용의자 선정 후 최종 2지선다)
             const { suspectID, suspectName, votes } = data;
 
             currentSuspectID = suspectID;
@@ -628,13 +714,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             addLog(`📌 1차 투표 결과: ${suspectName}님이 ${votes}표로 용의자로 지목되었습니다.`);
 
-            // 서버에도 용의자 저장
             socket.emit("setSuspect", {
                 roomID: Number(roomID),
                 suspectID,
             });
 
-            // 최종 2지선다 단계 시작
             socket.emit("phaseUpdate", {
                 roomID: Number(roomID),
                 phase: "finalChoiceStart",
@@ -648,6 +732,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     }
+
 
     // ------------------------------
     // 최종 2지선다 (라이어다 / 아니다)

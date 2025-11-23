@@ -45,13 +45,14 @@ exports.getRoomDetail = async (req, res) => {
 
         const [players] = await pool.query(
             `
-            SELECT userID, username,
-                   CASE WHEN userID = ? THEN 1 ELSE 0 END AS isHost
+            SELECT userID, username, score,
+                    CASE WHEN userID = ? THEN 1 ELSE 0 END AS isHost
             FROM user_tbl
             WHERE currentRoom = ?
         `,
             [room.hostID, roomID]
         );
+
 
         res.json({ room, players });
     } catch (err) {
@@ -447,6 +448,7 @@ exports.getVoteResult = async (req, res) => {
         }
 
         const roundNum = room.currentRound;
+        const liarID = room.liarID;
 
         const [rows] = await pool.query(
             `
@@ -455,19 +457,49 @@ exports.getVoteResult = async (req, res) => {
             WHERE roomID = ? AND roundNum = ?
             GROUP BY targetID
             ORDER BY voteCount DESC, targetID ASC
-            LIMIT 1
         `,
             [roomID, roundNum]
         );
 
+        // ✅ 아무도 투표 안 한 경우 → 라이어가 이 라운드를 승리
         if (rows.length === 0) {
-            return res.status(400).json({ message: "투표가 없습니다." });
+            let liarName = null;
+
+            if (liarID) {
+                // 라이어에게 라운드 승리 점수 +10 (기존 liarEscaped와 동일하게 맞춰도 됨)
+                await pool.query(
+                    `INSERT INTO liar_score_log (roomID, userID, roundNum, scoreChange, reason)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [roomID, liarID, roundNum, 10, "noFirstVoteLiarWin"]
+                );
+
+                const [[liarRow]] = await pool.query(
+                    `SELECT username FROM user_tbl WHERE userID = ?`,
+                    [liarID]
+                );
+                liarName = liarRow ? liarRow.username : null;
+            }
+
+            // 방 상태는 결과 단계로
+            await pool.query(
+                `UPDATE liar_game_room_tbl
+                 SET gameState = 'result'
+                 WHERE roomID = ?`,
+                [roomID]
+            );
+
+            return res.json({
+                roundNum,
+                outcome: "noFirstVoteLiarWin",
+                liarID,
+                liarName
+            });
         }
 
+        // ✅ 투표가 있는 일반적인 경우 (기존 로직 유지)
         const suspectID = rows[0].targetID;
         const votes = rows[0].voteCount;
 
-        // 방에 용의자 정보 저장 + 상태 defense
         await pool.query(
             `UPDATE liar_game_room_tbl 
              SET suspectID = ?, gameState = 'defense'
@@ -493,6 +525,8 @@ exports.getVoteResult = async (req, res) => {
         res.status(500).json({ message: "투표 결과 조회 실패" });
     }
 };
+
+
 
 // -----------------------
 // 최종(2지선다) 투표 저장
@@ -551,187 +585,201 @@ exports.getFinalVoteResult = async (req, res) => {
     const { roomID } = req.body;
 
     try {
-        const [rows] = await pool.query(
-    `
-    SELECT 
-        SUM(choice = 1) AS liarVoteCount,
-        SUM(choice = 0) AS notLiarVoteCount,
-        COUNT(*) AS totalVotes
-    FROM liar_final_vote_tbl
-    WHERE roomID = ? AND roundNum = ?
-`,
-    [roomID, roundNum]
-);
+        // 방 정보 + 라운드/라이어/용의자 정보 먼저 로드
+        const [[room]] = await pool.query(
+            `
+            SELECT currentRound, maxRounds, liarID, suspectID
+            FROM liar_game_room_tbl
+            WHERE roomID = ?
+        `,
+            [roomID]
+        );
 
-        // rows가 비어있어도 0으로 처리
+        if (!room || room.currentRound === 0) {
+            return res.status(400).json({ message: "진행 중인 라운드가 없습니다." });
+        }
+        if (!room.suspectID) {
+            return res.status(400).json({ message: "용의자가 지정되지 않았습니다." });
+        }
+
+        const roundNum = room.currentRound;
+        const suspectID = room.suspectID;
+        const liarID = room.liarID;
+
+        // 최종 투표 집계
+        const [rows] = await pool.query(
+            `
+            SELECT 
+                SUM(choice = 1) AS liarVoteCount,
+                SUM(choice = 0) AS notLiarVoteCount,
+                COUNT(*) AS totalVotes
+            FROM liar_final_vote_tbl
+            WHERE roomID = ? AND roundNum = ?
+        `,
+            [roomID, roundNum]
+        );
+
         const liarVoteCount = Number(rows[0]?.liarVoteCount) || 0;
         const notLiarVoteCount = Number(rows[0]?.notLiarVoteCount) || 0;
         const totalVotes = liarVoteCount + notLiarVoteCount;
 
-        let majorityChoice;
+        const isLiar = Number(suspectID) === Number(liarID);
+
+        let majorityChoice = null; // 1=라이어다, 0=아니다
+        let outcome = null;
+        let winnerInfo = null;
+
+        // 🔹 아무도 최종 투표 안 한 경우 → 라이어 자동 승리
         if (totalVotes === 0) {
-            // ✅ 아무도 투표 안 하면 라이어 자동 승리
-             majorityChoice = 1;
-        } else if (liarVoteCount > notLiarVoteCount) {
-             majorityChoice = 1; // 라이어다
-        } else if (liarVoteCount < notLiarVoteCount) {
-             majorityChoice = 0; // 아니다
-        } else {
-            // 동점이면 "아니다" → 재토론
-             majorityChoice = 0;
-            }
+            outcome = "noFinalVoteLiarWin";
 
-
-        const isLiar = Number(suspectID) === Number(room.liarID);
-
-        let outcome;
-        if (majorityChoice === 1) {
-            // 라이어다 (라고 판단)
-            outcome = isLiar ? "liarCaught" : "liarWronglyAccused";
-
-            // ---- 점수 계산 ----
-            if (isLiar) {
-                // 라이어 맞춤 → 라이어 제외 전원 +5점
-                const [players] = await pool.query(
-                    `SELECT userID FROM user_tbl WHERE currentRoom = ?`,
-                    [roomID]
+            if (liarID) {
+                await pool.query(
+                    `INSERT INTO liar_score_log (roomID, userID, roundNum, scoreChange, reason)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [roomID, liarID, roundNum, 10, "noFinalVoteLiarWin"]
                 );
-
-                for (const p of players) {
-                    if (Number(p.userID) === Number(room.liarID)) continue;
-                    await pool.query(
-                        `INSERT INTO liar_score_log (roomID, userID, roundNum, scoreChange, reason)
-                         VALUES (?, ?, ?, ?, ?)`,
-                        [roomID, p.userID, roundNum, 5, "liarCaught"]
-                    );
-                }
-            } else {
-                // 시민 오판 → 라이어 +10점
-                const liarID = room.liarID;
-                if (liarID) {
-                    await pool.query(
-                        `INSERT INTO liar_score_log (roomID, userID, roundNum, scoreChange, reason)
-                         VALUES (?, ?, ?, ?, ?)`,
-                        [roomID, liarID, roundNum, 10, "liarEscaped"]
-                    );
-                }
             }
 
-            // 이 경우에는 gameState를 result로
             await pool.query(
                 `UPDATE liar_game_room_tbl 
                  SET gameState = 'result'
                  WHERE roomID = ?`,
                 [roomID]
             );
+        } else {
+            // 🔹 투표는 있는 경우 → 다수결
+            if (liarVoteCount > notLiarVoteCount) {
+                majorityChoice = 1;
+            } else if (liarVoteCount < notLiarVoteCount) {
+                majorityChoice = 0;
+            } else {
+                majorityChoice = 0; // 동점 → 아니다
+            }
 
-            // ---- 마지막 라운드라면 최종 우승자 + 랭킹 반영 ----
-            let winnerInfo = null;
-            if (roundNum >= room.maxRounds) {
-                const [scoreRows] = await pool.query(
-                    `
-                    SELECT userID, SUM(scoreChange) AS totalScore
-                    FROM liar_score_log
-                    WHERE roomID = ?
-                    GROUP BY userID
-                    ORDER BY totalScore DESC
-                    LIMIT 1
-                `,
-                    [roomID]
-                );
+            if (majorityChoice === 1) {
+                // 라이어다 (라고 판단)
+                if (isLiar) {
+                    outcome = "liarCaught";
 
-                if (scoreRows.length > 0) {
-                    const winnerID = scoreRows[0].userID;
-                    const totalScore = Number(scoreRows[0].totalScore) || 0;
-
-                    // user_tbl 누적 점수 업데이트
-                    await pool.query(
-                        `UPDATE user_tbl 
-                         SET score = score + ?
-                         WHERE userID = ?`,
-                        [totalScore, winnerID]
+                    // 라이어 맞춤 → 라이어 제외 전원 +5점
+                    const [players] = await pool.query(
+                        `SELECT userID FROM user_tbl WHERE currentRoom = ?`,
+                        [roomID]
                     );
-
-                    // ranking_tbl 에 이번 게임 기록 (Option A: 누적 랭킹용)
-                    await pool.query(
-                        `INSERT INTO ranking_tbl (userID, score)
-                         VALUES (?, ?)`,
-                        [winnerID, totalScore]
-                    );
-
-                    const [[winnerUser]] = await pool.query(
-                        `SELECT username FROM user_tbl WHERE userID = ?`,
-                        [winnerID]
-                    );
-
-                    winnerInfo = {
-                        winnerID,
-                        winnerName: winnerUser ? winnerUser.username : null,
-                        totalScore
-                    };
+                    for (const p of players) {
+                        if (Number(p.userID) === Number(liarID)) continue;
+                        await pool.query(
+                            `INSERT INTO liar_score_log (roomID, userID, roundNum, scoreChange, reason)
+                             VALUES (?, ?, ?, ?, ?)`,
+                            [roomID, p.userID, roundNum, 5, "liarCaught"]
+                        );
+                    }
+                } else {
+                    // 시민 오판 → 라이어 +10점
+                    outcome = "liarEscaped";
+                    if (liarID) {
+                        await pool.query(
+                            `INSERT INTO liar_score_log (roomID, userID, roundNum, scoreChange, reason)
+                             VALUES (?, ?, ?, ?, ?)`,
+                            [roomID, liarID, roundNum, 10, "liarEscaped"]
+                        );
+                    }
                 }
 
-                // 게임 종료 상태로 업데이트
                 await pool.query(
-                    `UPDATE liar_game_room_tbl
-                     SET gameState = 'finished'
+                    `UPDATE liar_game_room_tbl 
+                     SET gameState = 'result'
+                     WHERE roomID = ?`,
+                    [roomID]
+                );
+            } else {
+                // "라이어가 아니다"가 우세 → 재토론
+                outcome = "redoDiscussion";
+                await pool.query(
+                    `UPDATE liar_game_room_tbl 
+                     SET gameState = 'discussion'
                      WHERE roomID = ?`,
                     [roomID]
                 );
             }
+        }
 
-            const [[suspectRow]] = await pool.query(
-                `SELECT username FROM user_tbl WHERE userID = ?`,
-                [suspectID]
-            );
-            const suspectName = suspectRow ? suspectRow.username : null;
-
-            return res.json({
-                roundNum,
-                suspectID,
-                suspectName,
-                liarID: room.liarID,
-                isLiar,
-                liarVoteCount,
-                notLiarVoteCount,
-                majorityChoice,
-                outcome,
-                winnerInfo
-            });
-        } else {
-            // 아니다 (라고 판단) → 재토론
-            outcome = "redoDiscussion";
-            await pool.query(
-                `UPDATE liar_game_room_tbl 
-                 SET gameState = 'discussion'
-                 WHERE roomID = ?`,
+        // 🔹 마지막 라운드라면 우승자/랭킹 처리
+        if (outcome !== "redoDiscussion" && roundNum >= room.maxRounds) {
+            const [scoreRows] = await pool.query(
+                `
+                SELECT userID, SUM(scoreChange) AS totalScore
+                FROM liar_score_log
+                WHERE roomID = ?
+                GROUP BY userID
+                ORDER BY totalScore DESC
+                LIMIT 1
+            `,
                 [roomID]
             );
 
-            const [[suspectRow]] = await pool.query(
-                `SELECT username FROM user_tbl WHERE userID = ?`,
-                [suspectID]
-            );
-            const suspectName = suspectRow ? suspectRow.username : null;
+            if (scoreRows.length > 0) {
+                const winnerID = scoreRows[0].userID;
+                const totalScore = Number(scoreRows[0].totalScore) || 0;
 
-            return res.json({
-                roundNum,
-                suspectID,
-                suspectName,
-                liarID: room.liarID,
-                isLiar,
-                liarVoteCount,
-                notLiarVoteCount,
-                majorityChoice,
-                outcome,
-                winnerInfo: null
-            });
+                await pool.query(
+                    `UPDATE user_tbl 
+                     SET score = score + ?
+                     WHERE userID = ?`,
+                    [totalScore, winnerID]
+                );
+
+                await pool.query(
+                    `INSERT INTO ranking_tbl (userID, score)
+                     VALUES (?, ?)`,
+                    [winnerID, totalScore]
+                );
+
+                const [[winnerUser]] = await pool.query(
+                    `SELECT username FROM user_tbl WHERE userID = ?`,
+                    [winnerID]
+                );
+
+                winnerInfo = {
+                    winnerID,
+                    winnerName: winnerUser ? winnerUser.username : null,
+                    totalScore
+                };
+            }
+
+            await pool.query(
+                `UPDATE liar_game_room_tbl
+                 SET gameState = 'finished'
+                 WHERE roomID = ?`,
+                [roomID]
+            );
         }
+
+        const [[suspectRow]] = await pool.query(
+            `SELECT username FROM user_tbl WHERE userID = ?`,
+            [suspectID]
+        );
+        const suspectName = suspectRow ? suspectRow.username : null;
+
+        return res.json({
+            roundNum,
+            suspectID,
+            suspectName,
+            liarID,
+            isLiar,
+            liarVoteCount,
+            notLiarVoteCount,
+            majorityChoice,
+            outcome,
+            winnerInfo
+        });
     } catch (err) {
         console.error("최종 투표 결과 조회 오류:", err);
         res.status(500).json({ message: "최종 투표 결과 조회 실패" });
     }
 };
+
 
 // -----------------------
 // 누적 점수 기반 랭킹
@@ -751,5 +799,75 @@ exports.getRanking = async (req, res) => {
     } catch (err) {
         console.error("랭킹 조회 오류:", err);
         res.status(500).json({ message: "랭킹 조회 실패" });
+    }
+};
+
+// -----------------------
+// 방별 라운드 점수 조회
+// -----------------------
+exports.getRoomScores = async (req, res) => {
+    const { roomID } = req.params;
+
+    try {
+        // 현재 방에 있는 플레이어 목록 (점수 로그가 없어도 0점으로 보이게 하기 위함)
+        const [playerRows] = await pool.query(
+            `SELECT userID, username 
+             FROM user_tbl 
+             WHERE currentRoom = ?`,
+            [roomID]
+        );
+
+        // 라운드별 점수 로그
+        const [logRows] = await pool.query(
+            `SELECT userID, roundNum, scoreChange
+             FROM liar_score_log
+             WHERE roomID = ?
+             ORDER BY roundNum ASC, userID ASC`,
+            [roomID]
+        );
+
+        const scoresByUser = {};
+        let maxRound = 0;
+
+        // 플레이어 기본 구조 세팅 (모두 0점으로 시작)
+        for (const p of playerRows) {
+            scoresByUser[p.userID] = {
+                userID: p.userID,
+                username: p.username,
+                perRound: {},   // { 1: +10, 2: -5, ... }
+                total: 0
+            };
+        }
+
+        // 로그를 돌면서 라운드별/총합 점수 누적
+        for (const row of logRows) {
+            const { userID, roundNum, scoreChange } = row;
+
+            if (!scoresByUser[userID]) {
+                // 혹시 currentRoom에는 없지만 로그에만 있는 유저가 있을 경우 대비
+                scoresByUser[userID] = {
+                    userID,
+                    username: `유저${userID}`,
+                    perRound: {},
+                    total: 0
+                };
+            }
+
+            const userObj = scoresByUser[userID];
+            userObj.perRound[roundNum] = (userObj.perRound[roundNum] || 0) + scoreChange;
+            userObj.total += scoreChange;
+
+            if (roundNum > maxRound) maxRound = roundNum;
+        }
+
+        const players = Object.values(scoresByUser);
+
+        res.json({
+            maxRound,
+            players,
+        });
+    } catch (err) {
+        console.error("라운드 점수 조회 오류:", err);
+        res.status(500).json({ message: "라운드 점수 조회 실패" });
     }
 };

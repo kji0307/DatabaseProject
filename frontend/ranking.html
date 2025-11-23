@@ -1,185 +1,131 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>랭킹 - 경주 문화재 라이어 게임</title>
+    <title>랭킹</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        body {
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            background: radial-gradient(circle at top, #1f2a48, #050816);
-            color: #fff;
-            font-family: "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        }
-
         main {
-            flex: 1;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding: 30px 0 40px;
+            padding: 30px 0;
         }
 
-        .ranking-container {
-            width: 92%;
-            max-width: 900px;
+        .ranking-wrapper {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(10, 20, 40, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            color: #fff;
         }
 
-        .ranking-hero {
-            margin-bottom: 18px;
-        }
-
-        .ranking-hero-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .ranking-hero-sub {
-            font-size: 0.95rem;
-            opacity: 0.9;
-        }
-
-        .ranking-card {
-            background: rgba(7, 14, 32, 0.95);
-            border-radius: 14px;
-            padding: 16px 18px 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.55);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .ranking-card-title {
-            font-size: 1.1rem;
+        .ranking-title {
+            font-size: 1.4rem;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             padding-bottom: 6px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
-        .ranking-list {
+        table.ranking-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
-        .ranking-list thead th {
-            text-align: left;
+        table.ranking-table thead {
+            background: #2768c5;
+        }
+
+        table.ranking-table th,
+        table.ranking-table td {
             padding: 8px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.12);
-            font-weight: 600;
-            font-size: 0.9rem;
+            text-align: center;
         }
 
-        .ranking-list tbody td {
-            padding: 7px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+        table.ranking-table tbody tr:nth-child(odd) {
+            background: rgba(20, 35, 70, 0.95);
         }
 
-        .ranking-list tbody tr:nth-child(even) {
-            background: rgba(15, 25, 55, 0.9);
-        }
-
-        .ranking-list tbody tr:nth-child(odd) {
-            background: rgba(9, 16, 38, 0.9);
-        }
-
-        .ranking-list tbody tr.my-rank {
-            background: rgba(231, 76, 60, 0.28);
+        table.ranking-table tbody tr:nth-child(even) {
+            background: rgba(10, 20, 45, 0.95);
         }
 
         .rank-num {
-            width: 70px;
+            width: 15%;
+            font-weight: 600;
         }
 
         .rank-nickname {
-            width: 55%;
+            width: 45%;
+            text-align: left;
+            padding-left: 18px;
         }
 
         .rank-score {
-            text-align: right;
-            font-weight: 600;
+            width: 40%;
         }
 
         .ranking-empty {
             text-align: center;
             padding: 16px 0;
-            opacity: 0.8;
+            color: #bdc3c7;
         }
 
-        .ranking-note {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        footer {
-            width: 100%;
+        .my-rank {
+            outline: 1px solid #f1c40f;
+            box-shadow: 0 0 12px rgba(241, 196, 15, 0.4);
         }
     </style>
 </head>
+
 <body>
-<header class="navbar">
-    <div class="nav-container">
-        <h1 class="logo"><a href="index.html">🎭경주 문화재</a></h1>
-        <nav>
-            <ul class="nav-menu">
-                <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
-                <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
-                <li><a href="ranking.html" class="nav-link">랭킹</a></li>
-                <li><a href="login.html" class="nav-link" id="login-menu">로그인</a></li>
-                <li id="logout-menu" style="display:none;"><a href="#" class="nav-link" id="logout-btn">로그아웃</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
+    <header class="navbar">
+        <div class="nav-container">
+            <h1 class="logo"><a href="index.html">🎭 경주 문화재 라이어 게임</a></h1>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="heritage_cate.html" class="nav-link">문화재 정보</a></li>
+                    <li><a href="game_lobby.html" class="nav-link">게임 시작</a></li>
+                    <li><a href="ranking.html" class="nav-link">랭킹</a></li>
+                    <li><a href="login.html" class="nav-link" id="login-menu">로그인</a></li>
+                    <li id="logout-menu" style="display:none;">
+                        <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-<main>
-    <div class="ranking-container">
-        <section class="ranking-hero">
-            <h2 class="ranking-hero-title">누적 점수 랭킹</h2>
-            <p class="ranking-hero-sub">
-                라이어 게임에서 얻은 점수는 계속 누적되며, 가장 높은 점수를 가진 플레이어가 상위권에 오릅니다.
-            </p>
-        </section>
-
-        <section class="ranking-card">
-            <div class="ranking-card-title">전체 플레이어 랭킹</div>
-
-            <table class="ranking-list">
+    <main>
+        <div class="ranking-wrapper">
+            <div class="ranking-title">누적 점수 랭킹</div>
+            <table class="ranking-table">
                 <thead>
                     <tr>
-                        <th class="rank-num">순위</th>
-                        <th class="rank-nickname">닉네임</th>
-                        <th class="rank-score">총점</th>
+                        <th>순위</th>
+                        <th>닉네임</th>
+                        <th>점수</th>
                     </tr>
                 </thead>
                 <tbody id="ranking-body">
-                    <tr>
-                        <td colspan="3" class="ranking-empty">랭킹을 불러오는 중입니다...</td>
-                    </tr>
+                    <!-- ranking.js에서 자동 채움 -->
                 </tbody>
             </table>
+        </div>
+    </main>
 
-            <p class="ranking-note">
-                * 라이어로 승리하면 10점, 시민이 라이어를 잡으면 5점이 누적됩니다.<br>
-                * 한 게임의 최종 우승자의 점수가 랭킹에 추가됩니다.
-            </p>
-        </section>
-    </div>
-</main>
+    <footer>
+        <p style="text-align:center; color:#fff; padding:10px 0;">
+            © 2025 경주 문화재 게임 | 제작: 지혁, 창민, 성민
+        </p>
+    </footer>
 
-<footer>
-    <p style="text-align:center; color:#fff; padding:10px 0;">
-        © 2025 경주 문화재 게임 | 제작: 지혁, 창민, 성민
-    </p>
-</footer>
-
-<script src="js/auth.js"></script>
-<script src="js/ranking.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ranking.js"></script>
 </body>
+
 </html>

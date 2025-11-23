@@ -763,12 +763,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         isGameOver = true;
                     }
 
-
-
-
-
-
-
                     // 라운드 결과 or 최종 결과를 방 전체에 브로드캐스트
                     socket.emit("phaseUpdate", {
                         roomID: Number(roomID),

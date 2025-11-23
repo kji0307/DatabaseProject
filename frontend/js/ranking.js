@@ -1,86 +1,82 @@
-// ranking.js 파일 내용
+// frontend/js/ranking.js
+// 누적 점수 기반 랭킹 표시
 
-// --- 1. 가상 랭킹 데이터 수정 (avatar, winRate 필드 제거) --- (실제로는 서버 API에서 가져와야 함)
-const rankingData = [
-    // rank, nickname, score, isMine 필드만 유지
-    { rank: 1, nickname: '선덕여왕', score: 12500, isMine: false },
-    { rank: 2, nickname: '김유신', score: 11000, isMine: false },
-    { rank: 3, nickname: '최치원', score: 9800, isMine: false },
-    { rank: 4, nickname: '불국사덕후', score: 9500, isMine: false },
-    { rank: 5, nickname: '경주사랑', score: 9200, isMine: false },
-    // ... (중간 생략)
-    { rank: 47, nickname: '나의 닉네임', score: 2500, isMine: true }, // 현재 사용자
-    // ...
-];
+document.addEventListener("DOMContentLoaded", () => {
+  const API_BASE_URL = "https://databaseproject-r39m.onrender.com";
+  const tbody = document.getElementById("ranking-body");
+  if (!tbody) return;
 
-const MY_NICKNAME = '나의 닉네임';  // 로그인된 사용자 닉네임 (실제로는 세션/로컬 스토리지에서 가져옴)
+  // 현재 로그인한 사용자 이름 (있으면 내 랭크 강조)
+  let currentUsername = null;
+  try {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      currentUsername = user?.username || null;
+    }
+  } catch (e) {
+    console.warn("user 파싱 오류:", e);
+  }
 
-// --- 2. 랭킹 데이터 렌더링 함수 (변경 없음) ---
-function renderRanking() {
-    // 1. Top 3 렌더링
-    const top3Container = document.querySelector('.top3-rank');
-    if (!top3Container) return;
-
-    const top1 = rankingData.find(item => item.rank === 1);
-    const top2 = rankingData.find(item => item.rank === 2);
-    const top3 = rankingData.find(item => item.rank === 3);
-
-    top3Container.innerHTML = `
-        ${createTopRankItem(top2, 'rank-2')}
-        ${createTopRankItem(top1, 'rank-1')}
-        ${createTopRankItem(top3, 'rank-3')}
+  async function loadRanking() {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" class="ranking-empty">랭킹을 불러오는 중입니다...</td>
+      </tr>
     `;
 
-    // 2. 일반 랭킹 목록 렌더링
-    const listBody = document.querySelector('.ranking-list tbody');
-    if (!listBody) return;
-    listBody.innerHTML = ''; 
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/game/ranking`);
+      const data = await res.json();
 
-    rankingData.forEach(item => {
-        if (item.rank >= 4) {
-            listBody.appendChild(createListItem(item));
-        }
-    });
-
-    const myRankItem = rankingData.find(item => item.nickname === MY_NICKNAME);
-    if (myRankItem && myRankItem.rank > 3) {
-         listBody.appendChild(createListItem(myRankItem, true));
-    }
-}
-
-
-// --- 3. HTML 생성 헬퍼 함수 수정 (아바타/승률 관련 코드 제거) ---
-
-// Top 3 항목 HTML 생성 (아바타 div 제거)
-function createTopRankItem(data, rankClass) {
-    if (!data) return '';
-    const medal = data.rank === 1 ? '🥇' : data.rank === 2 ? '🥈' : '🥉';
-    const isMineClass = data.isMine ? ' my-rank-top' : '';
-
-    return `
-        <div class="rank-item ${rankClass}${isMineClass}">
-            <span class="medal">${medal}</span>
-            <div class="nickname">${data.nickname}</div>
-            <div class="score">${data.score.toLocaleString()}점</div>
-        </div>
-    `;
-}
-
-// 일반 목록 항목 HTML 생성 (아바타와 승률 td 제거)
-function createListItem(data, isMyRank = false) {
-    const row = document.createElement('tr');
-    // 현재 사용자 순위라면 'my-rank' 클래스 추가
-    if (data.isMine || isMyRank) {
-        row.classList.add('my-rank');
-    }
-
-    row.innerHTML = `
-        <td class="rank-num">${data.rank}</td>
-        <td class="rank-nickname">${data.nickname}</td>
-        <td class="rank-score">${data.score.toLocaleString()}</td>
+      if (!res.ok) {
+        console.error("랭킹 조회 실패:", data.message || res.statusText);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" class="ranking-empty">랭킹을 불러오지 못했습니다.</td>
+          </tr>
         `;
-    return row;
-}
+        return;
+      }
 
-// --- 4. DOM 로드 후 함수 실행 ---
-document.addEventListener('DOMContentLoaded', renderRanking);
+      const list = data.ranking || [];
+
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" class="ranking-empty">아직 랭킹 데이터가 없습니다.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = "";
+
+      list.forEach((row, index) => {
+        const tr = document.createElement("tr");
+
+        // 내 닉네임과 같으면 강조
+        if (currentUsername && row.username === currentUsername) {
+          tr.classList.add("my-rank");
+        }
+
+        tr.innerHTML = `
+          <td class="rank-num">${index + 1}</td>
+          <td class="rank-nickname">${row.username}</td>
+          <td class="rank-score">${Number(row.score || 0).toLocaleString()}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error("랭킹 조회 오류:", err);
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="3" class="ranking-empty">랭킹 조회 중 오류가 발생했습니다.</td>
+        </tr>
+      `;
+    }
+  }
+
+  loadRanking();
+});

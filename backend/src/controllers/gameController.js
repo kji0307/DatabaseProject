@@ -551,48 +551,36 @@ exports.getFinalVoteResult = async (req, res) => {
     const { roomID } = req.body;
 
     try {
-        const [[room]] = await pool.query(
-            `SELECT currentRound, maxRounds, liarID, suspectID 
-             FROM liar_game_room_tbl 
-             WHERE roomID = ?`,
-            [roomID]
-        );
-
-        if (!room || room.currentRound === 0 || !room.suspectID) {
-            return res.status(400).json({ message: "진행 중인 라운드나 용의자 정보가 없습니다." });
-        }
-
-        const roundNum = room.currentRound;
-        const suspectID = room.suspectID;
-
         const [rows] = await pool.query(
-            `
-            SELECT 
-                SUM(choice = 1) AS liarVoteCount,
-                SUM(choice = 0) AS notLiarVoteCount,
-                COUNT(*) AS totalVotes
-            FROM liar_final_vote_tbl
-            WHERE roomID = ? AND roundNum = ?
-        `,
-            [roomID, roundNum]
-        );
+    `
+    SELECT 
+        SUM(choice = 1) AS liarVoteCount,
+        SUM(choice = 0) AS notLiarVoteCount,
+        COUNT(*) AS totalVotes
+    FROM liar_final_vote_tbl
+    WHERE roomID = ? AND roundNum = ?
+`,
+    [roomID, roundNum]
+);
 
-        if (!rows || rows.length === 0 || rows[0].totalVotes === 0) {
-            return res.status(400).json({ message: "최종 투표가 없습니다." });
-        }
-
-        const liarVoteCount = Number(rows[0].liarVoteCount) || 0;
-        const notLiarVoteCount = Number(rows[0].notLiarVoteCount) || 0;
+        // rows가 비어있어도 0으로 처리
+        const liarVoteCount = Number(rows[0]?.liarVoteCount) || 0;
+        const notLiarVoteCount = Number(rows[0]?.notLiarVoteCount) || 0;
+        const totalVotes = liarVoteCount + notLiarVoteCount;
 
         let majorityChoice;
-        if (liarVoteCount > notLiarVoteCount) {
-            majorityChoice = 1; // 라이어다
+        if (totalVotes === 0) {
+            // ✅ 아무도 투표 안 하면 라이어 자동 승리
+             majorityChoice = 1;
+        } else if (liarVoteCount > notLiarVoteCount) {
+             majorityChoice = 1; // 라이어다
         } else if (liarVoteCount < notLiarVoteCount) {
-            majorityChoice = 0; // 아니다
+             majorityChoice = 0; // 아니다
         } else {
-            // 동점이면 "아니다"로 처리해서 재토론으로 보내기
-            majorityChoice = 0;
-        }
+            // 동점이면 "아니다" → 재토론
+             majorityChoice = 0;
+            }
+
 
         const isLiar = Number(suspectID) === Number(room.liarID);
 

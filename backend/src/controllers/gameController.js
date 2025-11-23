@@ -519,6 +519,11 @@ exports.getFinalVoteResult = async (req, res) => {
         const suspectID = room.suspectID;
         const liarID = room.liarID;
 
+        const maxRounds =
+            room.maxRounds && Number(room.maxRounds) > 0
+                ? Number(room.maxRounds)
+                : 5;
+
         const [rows] = await pool.query(
             `
             SELECT 
@@ -604,7 +609,7 @@ exports.getFinalVoteResult = async (req, res) => {
         // -----------------------
         let winnerInfo = [];
 
-        if (roundNum >= room.maxRounds) {
+        if (roundNum >= maxRounds) {
             const [scoreRows] = await pool.query(
                 `
                 SELECT userID, SUM(scoreChange) AS totalScore
